@@ -1,10 +1,12 @@
 using CrossFitWOD.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrossFitWOD.Controllers;
 
 [ApiController]
 [Route("api/athlete-workouts")]
+[Authorize]
 public class AthleteWorkoutsController : ControllerBase
 {
     private readonly AthleteWorkoutService _service;

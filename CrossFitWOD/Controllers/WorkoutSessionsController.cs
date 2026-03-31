@@ -1,6 +1,7 @@
 using CrossFitWOD.DTOs.WorkoutSession;
 using CrossFitWOD.Entities;
 using CrossFitWOD.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,12 +15,11 @@ public class WorkoutSessionsController : ControllerBase
 
     public WorkoutSessionsController(AppDbContext db) => _db = db;
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateSessionDto dto)
     {
         var boxIdClaim = User.FindFirst("box_id")?.Value;
-        if (boxIdClaim is null)
-            return Unauthorized();
 
         var session = new WorkoutSession
         {
