@@ -1,35 +1,42 @@
 using CrossFitWOD.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrossFitWOD.Persistence;
 
 public class AppDbContext : DbContext
 {
-    private readonly Guid _boxId;
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options) { }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor accessor)
-        : base(options)
-    {
-        var claim = accessor.HttpContext?.User.FindFirst("box_id")?.Value;
-        _boxId = claim is not null ? Guid.Parse(claim) : Guid.Empty;
-    }
-
-    public DbSet<Athlete>        Athletes        => Set<Athlete>();
-    public DbSet<Wod>            Wods            => Set<Wod>();
-    public DbSet<WodExercise>    WodExercises    => Set<WodExercise>();
+    public DbSet<Box>     Boxes    => Set<Box>();
+    public DbSet<User>    Users    => Set<User>();
+    public DbSet<Athlete> Athletes => Set<Athlete>();
+    public DbSet<Wod> Wods => Set<Wod>();
+    public DbSet<WodExercise> WodExercises => Set<WodExercise>();
     public DbSet<WorkoutSession> WorkoutSessions => Set<WorkoutSession>();
     public DbSet<AthleteWorkout> AthleteWorkouts => Set<AthleteWorkout>();
-    public DbSet<WorkoutResult>  WorkoutResults  => Set<WorkoutResult>();
+    public DbSet<WorkoutResult> WorkoutResults => Set<WorkoutResult>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        // ── Global Query Filters (multi-tenancy automático) ──────────────
-        b.Entity<Athlete>()       .HasQueryFilter(x => x.BoxId == _boxId);
-        b.Entity<Wod>()           .HasQueryFilter(x => x.BoxId == _boxId);
-        b.Entity<WorkoutSession>().HasQueryFilter(x => x.BoxId == _boxId);
-        b.Entity<AthleteWorkout>().HasQueryFilter(x => x.BoxId == _boxId);
-        b.Entity<WorkoutResult>() .HasQueryFilter(x => x.BoxId == _boxId);
+        // ── Soft delete ──────────────────────────────────────────────────
+        b.Entity<Wod>().HasQueryFilter(w => !w.IsDeleted);
+
+        // ── Box → User / Athlete / WorkoutSession ─────────────────────────
+        b.Entity<User>()
+            .HasOne(u => u.Box)
+            .WithMany(bx => bx.Users)
+            .HasForeignKey(u => u.BoxId);
+
+        b.Entity<Athlete>()
+            .HasOne(a => a.Box)
+            .WithMany(bx => bx.Athletes)
+            .HasForeignKey(a => a.BoxId);
+
+        b.Entity<WorkoutSession>()
+            .HasOne(s => s.Box)
+            .WithMany()
+            .HasForeignKey(s => s.BoxId);
 
         // ── Relaciones ───────────────────────────────────────────────────
         b.Entity<Wod>()
@@ -48,7 +55,22 @@ public class AppDbContext : DbContext
             .WithOne(r => r.AthleteWorkout)
             .HasForeignKey<WorkoutResult>(r => r.AthleteWorkoutId);
 
+        // ── Relación User → Athlete ──────────────────────────────────────
+        b.Entity<Athlete>()
+            .HasOne(a => a.User)
+            .WithOne()
+            .HasForeignKey<Athlete>(a => a.UserId);
+
         // ── Índices ──────────────────────────────────────────────────────
+        b.Entity<User>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
+
+        b.Entity<Athlete>()
+            .HasIndex(a => a.UserId)
+            .IsUnique();
+
+        // Una sesión por box por día (reemplaza el unique en Date solo)
         b.Entity<WorkoutSession>()
             .HasIndex(s => new { s.BoxId, s.Date })
             .IsUnique();

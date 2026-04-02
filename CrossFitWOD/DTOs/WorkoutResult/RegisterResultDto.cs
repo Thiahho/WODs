@@ -1,7 +1,7 @@
 namespace CrossFitWOD.DTOs.WorkoutResult;
 
 public record RegisterResultDto(
-    Guid   AthleteWorkoutId,
+    int    AthleteWorkoutId,
     bool   Completed,
     int?   TimeSeconds,
     float? Rounds,

@@ -15,8 +15,7 @@ namespace CrossFitWOD.Migrations
                 name: "Athletes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    BoxId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Level = table.Column<int>(type: "integer", nullable: false),
                     Weight = table.Column<float>(type: "real", nullable: true),
@@ -31,8 +30,7 @@ namespace CrossFitWOD.Migrations
                 name: "Wods",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    BoxId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     Type = table.Column<int>(type: "integer", nullable: false),
@@ -48,8 +46,8 @@ namespace CrossFitWOD.Migrations
                 name: "WodExercises",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    WodId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    WodId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Reps = table.Column<int>(type: "integer", nullable: false),
                     Order = table.Column<int>(type: "integer", nullable: false)
@@ -69,9 +67,8 @@ namespace CrossFitWOD.Migrations
                 name: "WorkoutSessions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    BoxId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WodId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    WodId = table.Column<int>(type: "integer", nullable: false),
                     Date = table.Column<DateOnly>(type: "date", nullable: false)
                 },
                 constraints: table =>
@@ -89,10 +86,9 @@ namespace CrossFitWOD.Migrations
                 name: "AthleteWorkouts",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AthleteId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkoutSessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    BoxId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    AthleteId = table.Column<int>(type: "integer", nullable: false),
+                    WorkoutSessionId = table.Column<int>(type: "integer", nullable: false),
                     ScaledRepsFactor = table.Column<float>(type: "real", nullable: false),
                     Notes = table.Column<string>(type: "text", nullable: true)
                 },
@@ -117,9 +113,8 @@ namespace CrossFitWOD.Migrations
                 name: "WorkoutResults",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AthleteWorkoutId = table.Column<Guid>(type: "uuid", nullable: false),
-                    BoxId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    AthleteWorkoutId = table.Column<int>(type: "integer", nullable: false),
                     Completed = table.Column<bool>(type: "boolean", nullable: false),
                     TimeSeconds = table.Column<int>(type: "integer", nullable: true),
                     Rounds = table.Column<float>(type: "real", nullable: true),
@@ -157,12 +152,6 @@ namespace CrossFitWOD.Migrations
                 name: "IX_WorkoutResults_AthleteWorkoutId",
                 table: "WorkoutResults",
                 column: "AthleteWorkoutId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WorkoutSessions_BoxId_Date",
-                table: "WorkoutSessions",
-                columns: new[] { "BoxId", "Date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

@@ -21,11 +21,26 @@ public class ErrorHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = ex.Message }));
         }
-        catch (Exception)
+        catch (ForbiddenException ex)
+        {
+            context.Response.StatusCode  = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = ex.Message }));
+        }
+        catch (InvalidOperationException ex)
+        {
+            context.Response.StatusCode  = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = ex.Message }));
+        }
+        catch (Exception ex)
         {
             context.Response.StatusCode  = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "Error interno del servidor" }));
+            var detail = context.RequestServices
+                .GetRequiredService<IHostEnvironment>().IsDevelopment()
+                ? ex.ToString() : "Error interno del servidor";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = detail }));
         }
     }
 }

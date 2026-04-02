@@ -3,18 +3,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterResultSchema, type RegisterResultForm } from "@/lib/schemas";
-import { useRegisterResult } from "@/hooks/use-register-result";
+import { useRegisterResult, type WorkoutResultResponse } from "@/hooks/use-register-result";
 import { useState } from "react";
 
 interface ResultFormProps {
-  athleteWorkoutId: string;
-  athleteId: string;
-  onSuccess: () => void;
+  athleteWorkoutId: number;
+  wodType: string;
+  onSuccess: (result: WorkoutResultResponse) => void;
 }
 
-export function ResultForm({ athleteWorkoutId, athleteId, onSuccess }: ResultFormProps) {
-  const mutation = useRegisterResult(athleteId);
+export function ResultForm({ athleteWorkoutId, wodType, onSuccess }: ResultFormProps) {
+  const mutation = useRegisterResult();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const isForTime = wodType === "ForTime";
+  const isAmrap   = wodType === "Amrap";
+  const isEmom    = wodType === "Emom";
 
   const {
     register,
@@ -32,8 +36,8 @@ export function ResultForm({ athleteWorkoutId, athleteId, onSuccess }: ResultFor
   async function onSubmit(data: RegisterResultForm) {
     setServerError(null);
     try {
-      await mutation.mutateAsync({ ...data, athleteWorkoutId });
-      onSuccess();
+      const result = await mutation.mutateAsync({ ...data, athleteWorkoutId });
+      onSuccess(result);
     } catch {
       setServerError("No se pudo registrar el resultado. Intenta de nuevo.");
     }
@@ -41,15 +45,18 @@ export function ResultForm({ athleteWorkoutId, athleteId, onSuccess }: ResultFor
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Completed */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
-          {...register("completed")}
-        />
-        <span className="text-sm font-medium text-zinc-300">WOD completado</span>
-      </label>
+
+      {/* Completed — solo relevante en ForTime */}
+      {isForTime && (
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+            {...register("completed")}
+          />
+          <span className="text-sm font-medium text-zinc-300">WOD completado</span>
+        </label>
+      )}
 
       {/* RPE Slider */}
       <div className="space-y-2">
@@ -75,22 +82,67 @@ export function ResultForm({ athleteWorkoutId, athleteId, onSuccess }: ResultFor
         )}
       </div>
 
-      {/* Time (optional) */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-300">
-          Tiempo total <span className="text-zinc-500">(segundos, opcional)</span>
-        </label>
-        <input
-          type="number"
-          min={1}
-          placeholder="ej. 360"
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          {...register("timeSeconds", { valueAsNumber: true })}
-        />
-        {errors.timeSeconds && (
-          <p className="text-xs text-red-400">{errors.timeSeconds.message}</p>
-        )}
-      </div>
+      {/* ForTime → tiempo en segundos */}
+      {isForTime && (
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-zinc-300">
+            Tiempo total <span className="text-zinc-500">(segundos)</span>
+          </label>
+          <input
+            type="number"
+            min={1}
+            placeholder="ej. 360"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            {...register("timeSeconds", { valueAsNumber: true })}
+          />
+          {errors.timeSeconds && (
+            <p className="text-xs text-red-400">{errors.timeSeconds.message}</p>
+          )}
+        </div>
+      )}
+
+      {/* AMRAP → rondas completas */}
+      {isAmrap && (
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-zinc-300">
+            Rondas completas
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={0.1}
+            placeholder="ej. 8.5"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            {...register("rounds", { valueAsNumber: true })}
+          />
+          <p className="text-xs text-zinc-500">
+            Podés usar decimales para rondas parciales (ej. 8.5 = 8 rondas + mitad)
+          </p>
+          {errors.rounds && (
+            <p className="text-xs text-red-400">{errors.rounds.message}</p>
+          )}
+        </div>
+      )}
+
+      {/* EMOM → rondas completadas sobre el total */}
+      {isEmom && (
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-zinc-300">
+            Rondas completadas
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            placeholder="ej. 9"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            {...register("rounds", { valueAsNumber: true })}
+          />
+          {errors.rounds && (
+            <p className="text-xs text-red-400">{errors.rounds.message}</p>
+          )}
+        </div>
+      )}
 
       {serverError && (
         <p className="rounded-lg bg-red-900/40 px-3 py-2 text-sm text-red-300">

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -12,11 +11,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             .UseNpgsql("Host=localhost;Port=5432;Database=db_wods;Username=postgres;Password=456789;")
             .Options;
 
-        return new AppDbContext(options, new NullHttpContextAccessor());
-    }
-
-    private sealed class NullHttpContextAccessor : IHttpContextAccessor
-    {
-        public HttpContext? HttpContext { get; set; } = null;
+        return new AppDbContext(options);
     }
 }

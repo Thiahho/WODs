@@ -2,18 +2,34 @@ namespace CrossFitWOD.DTOs.AthleteWod;
 
 public class AthleteWodResponseDto
 {
-    public Guid   AthleteWorkoutId { get; set; }
-    public string WodTitle         { get; set; } = string.Empty;
-    public string WodType          { get; set; } = string.Empty;
-    public int    DurationMinutes  { get; set; }
+    public int    Id               { get; set; }
+    public int    AthleteId        { get; set; }
+    public int    WorkoutSessionId { get; set; }
     public float  ScaledRepsFactor { get; set; }
-    public List<ScaledExerciseDto> Exercises { get; set; } = [];
+    public WorkoutSessionDto WorkoutSession { get; set; } = null!;
 }
 
-public class ScaledExerciseDto
+public class WorkoutSessionDto
 {
-    public string Name        { get; set; } = string.Empty;
-    public int    BaseReps    { get; set; }
-    public int    ScaledReps  { get; set; }
-    public float  ScaleFactor { get; set; }
+    public int    Id   { get; set; }
+    public string Date { get; set; } = string.Empty;
+    public WodDto Wod  { get; set; } = null!;
+}
+
+public class WodDto
+{
+    public int     Id              { get; set; }
+    public string  Title           { get; set; } = string.Empty;
+    public string? Description     { get; set; }
+    public string  Type            { get; set; } = string.Empty;
+    public int     DurationMinutes { get; set; }
+    public List<WodExerciseDto> Exercises { get; set; } = [];
+}
+
+public class WodExerciseDto
+{
+    public int    Id    { get; set; }
+    public string Name  { get; set; } = string.Empty;
+    public int    Reps  { get; set; }
+    public int    Order { get; set; }
 }

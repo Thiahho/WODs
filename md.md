@@ -87,8 +87,8 @@ Entidades
 csharp// Domain/Entities/Athlete.cs
 public class Athlete
 {
-    public Guid   Id        { get; set; } = Guid.NewGuid();
-    public Guid   BoxId     { get; set; }           // tenant
+    public int   Id        { get; set; } = int.Newint();
+    public int   BoxId     { get; set; }           // tenant
     public string Name      { get; set; } = string.Empty;
     public AthleteLevel Level { get; set; } = AthleteLevel.Beginner;
     public float? Weight    { get; set; }           // opcional
@@ -101,8 +101,8 @@ public class Athlete
 // Domain/Entities/Wod.cs
 public class Wod
 {
-    public Guid    Id              { get; set; } = Guid.NewGuid();
-    public Guid    BoxId           { get; set; }
+    public int    Id              { get; set; } = int.Newint();
+    public int    BoxId           { get; set; }
     public string  Title           { get; set; } = string.Empty;
     public string? Description     { get; set; }
     public WodType Type            { get; set; }
@@ -117,8 +117,8 @@ public class Wod
 // Domain/Entities/WodExercise.cs
 public class WodExercise
 {
-    public Guid   Id    { get; set; } = Guid.NewGuid();
-    public Guid   WodId { get; set; }
+    public int   Id    { get; set; } = int.Newint();
+    public int   WodId { get; set; }
     public string Name  { get; set; } = string.Empty;  // "Push-ups"
     public int    Reps  { get; set; }
     public int    Order { get; set; }
@@ -131,9 +131,9 @@ public class WodExercise
 // Instancia del WOD en un día concreto
 public class WorkoutSession
 {
-    public Guid     Id    { get; set; } = Guid.NewGuid();
-    public Guid     BoxId { get; set; }
-    public Guid     WodId { get; set; }
+    public int     Id    { get; set; } = int.Newint();
+    public int     BoxId { get; set; }
+    public int     WodId { get; set; }
     public DateOnly Date  { get; set; }
 
     // Nav
@@ -145,10 +145,10 @@ public class WorkoutSession
 // Versión personalizada del WOD para un atleta
 public class AthleteWorkout
 {
-    public Guid  Id                { get; set; } = Guid.NewGuid();
-    public Guid  AthleteId         { get; set; }
-    public Guid  WorkoutSessionId  { get; set; }
-    public Guid  BoxId             { get; set; }
+    public int  Id                { get; set; } = int.Newint();
+    public int  AthleteId         { get; set; }
+    public int  WorkoutSessionId  { get; set; }
+    public int  BoxId             { get; set; }
     public float ScaledRepsFactor  { get; set; } = 1.0f;  // 0.8 | 1.0 | 1.2
     public string? Notes           { get; set; }
 
@@ -161,9 +161,9 @@ public class AthleteWorkout
 // Domain/Entities/WorkoutResult.cs
 public class WorkoutResult
 {
-    public Guid  Id               { get; set; } = Guid.NewGuid();
-    public Guid  AthleteWorkoutId { get; set; }
-    public Guid  BoxId            { get; set; }
+    public int  Id               { get; set; } = int.Newint();
+    public int  AthleteWorkoutId { get; set; }
+    public int  BoxId            { get; set; }
     public bool  Completed        { get; set; }
     public int?  TimeSeconds      { get; set; }
     public float? Rounds          { get; set; }
@@ -177,14 +177,14 @@ DbContext con Global Query Filters
 csharp// Infrastructure/Persistence/AppDbContext.cs
 public class AppDbContext : DbContext
 {
-    private readonly Guid _boxId;
+    private readonly int _boxId;
 
     public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor accessor)
         : base(options)
     {
         // El boxId viene del JWT — nunca del cliente
         var claim = accessor.HttpContext?.User.FindFirst("box_id")?.Value;
-        _boxId = claim is not null ? Guid.Parse(claim) : Guid.Empty;
+        _boxId = claim is not null ? int.Parse(claim) : int.Empty;
     }
 
     public DbSet<Athlete>        Athletes        => Set<Athlete>();
@@ -297,7 +297,7 @@ public class AthleteWorkoutService
     public AthleteWorkoutService(AppDbContext db) => _db = db;
 
     // Obtiene o crea el AthleteWorkout del día con scaling aplicado
-    public async Task<AthleteWodResponseDto> GetTodayAsync(Guid athleteId)
+    public async Task<AthleteWodResponseDto> GetTodayAsync(int athleteId)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -368,7 +368,7 @@ public class AthleteWorkoutService
 DTOs
 csharp// Application/DTOs/WorkoutResult/RegisterResultDto.cs
 public record RegisterResultDto(
-    Guid   AthleteWorkoutId,
+    int   AthleteWorkoutId,
     bool   Completed,
     int?   TimeSeconds,
     float? Rounds,
@@ -378,7 +378,7 @@ public record RegisterResultDto(
 // Application/DTOs/AthleteWod/AthleteWodResponseDto.cs
 public class AthleteWodResponseDto
 {
-    public Guid   AthleteWorkoutId { get; set; }
+    public int   AthleteWorkoutId { get; set; }
     public string WodTitle         { get; set; } = string.Empty;
     public string WodType          { get; set; } = string.Empty;
     public int    DurationMinutes  { get; set; }
@@ -402,8 +402,8 @@ public class AthleteWorkoutsController : ControllerBase
     private readonly AthleteWorkoutService _service;
     public AthleteWorkoutsController(AthleteWorkoutService service) => _service = service;
 
-    [HttpGet("today/{athleteId:guid}")]
-    public async Task<IActionResult> GetToday(Guid athleteId)
+    [HttpGet("today/{athleteId:int}")]
+    public async Task<IActionResult> GetToday(int athleteId)
     {
         var result = await _service.GetTodayAsync(athleteId);
         return Ok(result);
@@ -444,7 +444,7 @@ public class WorkoutSessionsController : ControllerBase
         {
             WodId = dto.WodId,
             Date  = dto.Date,
-            BoxId = Guid.Parse(User.FindFirst("box_id")!.Value)
+            BoxId = int.Parse(User.FindFirst("box_id")!.Value)
         };
         _db.WorkoutSessions.Add(session);
         await _db.SaveChangesAsync();

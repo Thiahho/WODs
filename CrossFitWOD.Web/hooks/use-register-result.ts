@@ -5,17 +5,30 @@ import { api } from "@/lib/api";
 import type { RegisterResultForm } from "@/lib/schemas";
 
 interface RegisterResultPayload extends RegisterResultForm {
-  athleteWorkoutId: string;
+  athleteWorkoutId: number;
 }
 
-export function useRegisterResult(athleteId: string) {
+export interface WorkoutResultResponse {
+  id:                  number;
+  athleteWorkoutId:    number;
+  completed:           boolean;
+  timeSeconds:         number | null;
+  rounds:              number | null;
+  rpe:                 number;
+  createdAt:           string;
+  newScaledRepsFactor: number;
+  factorChanged:       boolean;
+  factorMessage:       string;
+}
+
+export function useRegisterResult() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: RegisterResultPayload) =>
-      api.post("/api/workout-results", payload),
+      api.post<WorkoutResultResponse>("/api/workout-results", payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["today-workout", athleteId] });
+      queryClient.invalidateQueries({ queryKey: ["today-workout"] });
     },
   });
 }

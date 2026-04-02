@@ -27,12 +27,10 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.Athlete", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -54,15 +52,13 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.AthleteWorkout", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("AthleteId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("AthleteId")
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -70,8 +66,8 @@ namespace CrossFitWOD.Migrations
                     b.Property<float>("ScaledRepsFactor")
                         .HasColumnType("real");
 
-                    b.Property<Guid>("WorkoutSessionId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WorkoutSessionId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -85,12 +81,9 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.Wod", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -99,7 +92,7 @@ namespace CrossFitWOD.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("DurationMinutes")
-                        .HasColumnType("integer");
+                        .HasColumnType("");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -115,9 +108,9 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.WodExercise", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -129,8 +122,8 @@ namespace CrossFitWOD.Migrations
                     b.Property<int>("Reps")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("WodId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WodId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -141,15 +134,12 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutResult", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("AthleteWorkoutId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("AthleteWorkoutId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("Completed")
                         .HasColumnType("boolean");
@@ -176,24 +166,21 @@ namespace CrossFitWOD.Migrations
 
             modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<Guid>("WodId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WodId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("WodId");
 
-                    b.HasIndex("BoxId", "Date")
+                    b.HasIndex("Date")
                         .IsUnique();
 
                     b.ToTable("WorkoutSessions");

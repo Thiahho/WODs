@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { TodayWorkout } from "@/lib/schemas";
+import type { WorkoutResultResponse } from "@/hooks/use-register-result";
 import { ScalingBadge } from "./scaling-badge";
 import { ResultForm } from "./result-form";
 
@@ -11,17 +12,31 @@ const WOD_TYPE_LABEL: Record<string, string> = {
   Emom:    "EMOM",
 };
 
-interface WorkoutCardProps {
-  workout: TodayWorkout;
-  athleteId: string;
+function factorLabel(factor: number): string {
+  if (factor <= 0.6) return "muy reducido";
+  if (factor <= 0.8) return "reducido";
+  if (factor <= 1.1) return "estándar (Rx)";
+  if (factor <= 1.3) return "por encima del Rx";
+  return "alta intensidad";
 }
 
-export function WorkoutCard({ workout, athleteId }: WorkoutCardProps) {
-  const [showForm, setShowForm] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+interface WorkoutCardProps {
+  workout: TodayWorkout;
+}
+
+export function WorkoutCard({ workout }: WorkoutCardProps) {
+  const [showForm, setShowForm]   = useState(false);
+  const [nextFactor, setNextFactor] = useState<number | null>(null);
+  const [reason, setReason]       = useState<string>("");
 
   const { wod } = workout.workoutSession;
-  const factor = workout.scaledRepsFactor;
+  const factor  = workout.scaledRepsFactor;
+
+  function handleSuccess(result: WorkoutResultResponse) {
+    setNextFactor(result.newScaledRepsFactor);
+    setReason(result.factorMessage);
+    setShowForm(false);
+  }
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg space-y-5">
@@ -37,7 +52,7 @@ export function WorkoutCard({ workout, athleteId }: WorkoutCardProps) {
       </div>
 
       {/* Scaling factor */}
-      <ScalingBadge factor={factor} />
+      <ScalingBadge factor={nextFactor ?? factor} />
 
       {/* Exercises */}
       <ul className="space-y-2">
@@ -52,13 +67,9 @@ export function WorkoutCard({ workout, athleteId }: WorkoutCardProps) {
               >
                 <span className="text-sm font-medium text-zinc-200">{ex.name}</span>
                 <div className="text-right">
-                  <span className="text-lg font-bold text-orange-400">
-                    {scaledReps}
-                  </span>
+                  <span className="text-lg font-bold text-orange-400">{scaledReps}</span>
                   {factor !== 1 && (
-                    <span className="ml-1.5 text-xs text-zinc-500 line-through">
-                      {ex.reps}
-                    </span>
+                    <span className="ml-1.5 text-xs text-zinc-500 line-through">{ex.reps}</span>
                   )}
                   <span className="ml-1 text-xs text-zinc-500">reps</span>
                 </div>
@@ -67,33 +78,36 @@ export function WorkoutCard({ workout, athleteId }: WorkoutCardProps) {
           })}
       </ul>
 
-      {/* Result form */}
-      {!submitted ? (
-        !showForm ? (
-          <button
-            onClick={() => setShowForm(true)}
-            className="w-full rounded-lg border border-orange-500/50 px-4 py-2.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors"
-          >
-            Registrar resultado
-          </button>
-        ) : (
-          <div className="border-t border-zinc-800 pt-5">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-300">
-              ¿Cómo fue el WOD?
-            </h3>
-            <ResultForm
-              athleteWorkoutId={workout.id}
-              athleteId={athleteId}
-              onSuccess={() => {
-                setShowForm(false);
-                setSubmitted(true);
-              }}
-            />
+      {/* Estados del resultado */}
+      {nextFactor !== null ? (
+        <div className="rounded-xl border border-zinc-700 bg-zinc-800/60 p-4 space-y-3">
+          <p className="text-sm text-zinc-300">{reason}</p>
+          <div className="border-t border-zinc-700 pt-3 flex items-baseline justify-between">
+            <span className="text-xs text-zinc-500">Tu próximo WOD</span>
+            <div className="text-right">
+              <span className="text-lg font-bold text-orange-400">
+                {Math.round(nextFactor * 100)}%
+              </span>
+              <span className="ml-1.5 text-sm text-zinc-400">del volumen base</span>
+            </div>
           </div>
-        )
+          <p className="text-xs text-zinc-500 capitalize">{factorLabel(nextFactor)}</p>
+        </div>
+      ) : !showForm ? (
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full rounded-lg border border-orange-500/50 px-4 py-2.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors"
+        >
+          Registrar resultado
+        </button>
       ) : (
-        <div className="rounded-lg bg-emerald-900/30 px-4 py-3 text-center text-sm font-medium text-emerald-300">
-          ¡Resultado registrado! El factor de reps se ajustará para el próximo WOD.
+        <div className="border-t border-zinc-800 pt-5">
+          <h3 className="mb-4 text-sm font-semibold text-zinc-300">¿Cómo fue el WOD?</h3>
+          <ResultForm
+            athleteWorkoutId={workout.id}
+            wodType={wod.type}
+            onSuccess={handleSuccess}
+          />
         </div>
       )}
     </div>

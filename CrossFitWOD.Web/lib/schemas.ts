@@ -3,14 +3,14 @@ import { z } from "zod";
 // ── API response shapes ───────────────────────────────────────────────────────
 
 export const WodExerciseSchema = z.object({
-  id:    z.string().uuid(),
+  id:    z.number().int(),
   name:  z.string(),
   reps:  z.number(),
   order: z.number(),
 });
 
 export const WodSchema = z.object({
-  id:              z.string().uuid(),
+  id:              z.number().int(),
   title:           z.string(),
   description:     z.string().optional(),
   type:            z.string(),
@@ -19,12 +19,12 @@ export const WodSchema = z.object({
 });
 
 export const TodayWorkoutSchema = z.object({
-  id:               z.string().uuid(),
-  athleteId:        z.string().uuid(),
-  workoutSessionId: z.string().uuid(),
+  id:               z.number().int(),
+  athleteId:        z.number().int(),
+  workoutSessionId: z.number().int(),
   scaledRepsFactor: z.number(),
   workoutSession: z.object({
-    id:   z.string().uuid(),
+    id:   z.number().int(),
     date: z.string(),
     wod:  WodSchema,
   }),
@@ -40,12 +40,34 @@ export const RegisterResultSchema = z.object({
 });
 
 export const LoginSchema = z.object({
-  boxId:  z.string().uuid("Debe ser un UUID válido"),
-  secret: z.string().min(1, "El secreto es requerido"),
+  username: z.string().min(1, "El usuario es requerido"),
+  password: z.string().min(1, "La contraseña es requerida"),
+});
+
+export const RegisterSchema = z.object({
+  username: z.string().min(3, "Mínimo 3 caracteres"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
+  confirm:  z.string(),
+}).refine((d) => d.password === d.confirm, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirm"],
+});
+
+export const SetupProfileSchema = z.object({
+  name:                  z.string().min(1, "El nombre es requerido"),
+  level:                 z.coerce.number().int().min(1).max(3),
+  goal:                  z.coerce.number().int().min(1).max(4),
+  weight:                z.coerce.number().positive().optional(),
+  daysPerWeek:           z.coerce.number().int().min(1).max(7).default(3),
+  sessionDurationMinutes: z.coerce.number().int().default(45),
+  equipment:             z.string().default(""),
+  weakPoints:            z.string().default(""),
 });
 
 // ── Inferred types ────────────────────────────────────────────────────────────
 
-export type TodayWorkout     = z.infer<typeof TodayWorkoutSchema>;
+export type TodayWorkout       = z.infer<typeof TodayWorkoutSchema>;
 export type RegisterResultForm = z.infer<typeof RegisterResultSchema>;
-export type LoginForm        = z.infer<typeof LoginSchema>;
+export type LoginForm          = z.infer<typeof LoginSchema>;
+export type RegisterForm       = z.infer<typeof RegisterSchema>;
+export type SetupProfileForm   = z.infer<typeof SetupProfileSchema>;

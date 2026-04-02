@@ -1,5 +1,6 @@
 using CrossFitWOD.DTOs.WorkoutResult;
 using CrossFitWOD.Entities;
+using CrossFitWOD.Enums;
 using CrossFitWOD.Exceptions;
 using CrossFitWOD.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,16 +13,27 @@ public class WorkoutResultService
 
     public WorkoutResultService(AppDbContext db) => _db = db;
 
-    public async Task<WorkoutResult> RegisterAsync(RegisterResultDto dto)
+    public async Task<WorkoutResultResponseDto> RegisterAsync(RegisterResultDto dto, int userId)
     {
         var athleteWorkout = await _db.AthleteWorkouts
+            .IgnoreQueryFilters()
+            .Include(aw => aw.Athlete)
             .FirstOrDefaultAsync(a => a.Id == dto.AthleteWorkoutId)
             ?? throw new NotFoundException("AthleteWorkout no encontrado");
+
+        if (athleteWorkout.Athlete.UserId != userId)
+            throw new ForbiddenException("No tenés permiso para registrar este resultado.");
+
+        var alreadyExists = await _db.WorkoutResults
+            .IgnoreQueryFilters()
+            .AnyAsync(r => r.AthleteWorkoutId == dto.AthleteWorkoutId);
+
+        if (alreadyExists)
+            throw new InvalidOperationException("Ya existe un resultado para este workout.");
 
         var result = new WorkoutResult
         {
             AthleteWorkoutId = dto.AthleteWorkoutId,
-            BoxId            = athleteWorkout.BoxId,
             Completed        = dto.Completed,
             TimeSeconds      = dto.TimeSeconds,
             Rounds           = dto.Rounds,
@@ -29,22 +41,47 @@ public class WorkoutResultService
         };
 
         _db.WorkoutResults.Add(result);
-        AdjustNextFactor(athleteWorkout, result);
+
+        var previousFactor = athleteWorkout.ScaledRepsFactor;
+        var goal           = athleteWorkout.Athlete.Goal;
+        AdjustNextFactor(athleteWorkout, result, goal);
+        var newFactor      = athleteWorkout.ScaledRepsFactor;
+
         await _db.SaveChangesAsync();
-        return result;
+
+        return new WorkoutResultResponseDto(
+            Id:                  result.Id,
+            AthleteWorkoutId:    result.AthleteWorkoutId,
+            Completed:           result.Completed,
+            TimeSeconds:         result.TimeSeconds,
+            Rounds:              result.Rounds,
+            Rpe:                 result.Rpe,
+            CreatedAt:           result.CreatedAt,
+            NewScaledRepsFactor: newFactor,
+            FactorChanged:       Math.Abs(newFactor - previousFactor) > 0.001f,
+            FactorMessage:       BuildFactorMessage(result, previousFactor, newFactor)
+        );
     }
 
-    private static void AdjustNextFactor(AthleteWorkout aw, WorkoutResult result)
+    private static string BuildFactorMessage(WorkoutResult result, float previous, float next)
     {
-        const float step = 0.1f;
-        const float min  = 0.5f;
-        const float max  = 1.5f;
+        if (!result.Completed)
+            return "No completaste el WOD — bajamos la carga para la próxima.";
 
-        if (!result.Completed || result.Rpe >= 9)
-            aw.ScaledRepsFactor -= step;
-        else if (result.Rpe <= 6)
-            aw.ScaledRepsFactor += step;
+        if (result.Rpe >= 9)
+            return $"RPE {result.Rpe} — esfuerzo muy alto. Bajamos un poco la carga.";
 
-        aw.ScaledRepsFactor = Math.Clamp(aw.ScaledRepsFactor, min, max);
+        if (result.Rpe <= 6)
+            return next > previous
+                ? $"RPE {result.Rpe} — te quedó cómodo. Subimos la carga para el próximo."
+                : $"RPE {result.Rpe} — ya estás en el techo para tu objetivo. Buen trabajo.";
+
+        return "Intensidad mantenida — seguís en tu ritmo.";
+    }
+
+    private static void AdjustNextFactor(AthleteWorkout aw, WorkoutResult result, AthleteGoal goal)
+    {
+        aw.ScaledRepsFactor = ScalingCalculator.AdjustFactor(
+            aw.ScaledRepsFactor, result.Completed, result.Rpe, goal);
     }
 }

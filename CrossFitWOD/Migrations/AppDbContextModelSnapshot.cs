@@ -22,17 +22,29 @@ namespace CrossFitWOD.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.Athlete", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.Athlete", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoxId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DaysPerWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Equipment")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Goal")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -41,25 +53,39 @@ namespace CrossFitWOD.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("SessionDurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WeakPoints")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<float?>("Weight")
                         .HasColumnType("real");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BoxId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.ToTable("Athletes");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.AthleteWorkout", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.AthleteWorkout", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("AthleteId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("AthleteId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -67,8 +93,8 @@ namespace CrossFitWOD.Migrations
                     b.Property<float>("ScaledRepsFactor")
                         .HasColumnType("real");
 
-                    b.Property<Guid>("WorkoutSessionId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WorkoutSessionId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -80,14 +106,82 @@ namespace CrossFitWOD.Migrations
                     b.ToTable("AthleteWorkouts");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.Wod", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.Box", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsIndividual")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("SubscriptionEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("TrialEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Boxes");
+                });
+
+            modelBuilder.Entity("CrossFitWOD.Entities.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoxId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoxId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("CrossFitWOD.Entities.Wod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -97,6 +191,9 @@ namespace CrossFitWOD.Migrations
 
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -110,11 +207,13 @@ namespace CrossFitWOD.Migrations
                     b.ToTable("Wods");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WodExercise", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WodExercise", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -126,8 +225,8 @@ namespace CrossFitWOD.Migrations
                     b.Property<int>("Reps")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("WodId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WodId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -136,17 +235,16 @@ namespace CrossFitWOD.Migrations
                     b.ToTable("WodExercises");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutResult", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WorkoutResult", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("AthleteWorkoutId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("AthleteWorkoutId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("Completed")
                         .HasColumnType("boolean");
@@ -171,20 +269,22 @@ namespace CrossFitWOD.Migrations
                     b.ToTable("WorkoutResults");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutSession", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WorkoutSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoxId")
+                        .HasColumnType("integer");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<Guid>("WodId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("WodId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -196,15 +296,34 @@ namespace CrossFitWOD.Migrations
                     b.ToTable("WorkoutSessions");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.AthleteWorkout", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.Athlete", b =>
                 {
-                    b.HasOne("CrossFitWOD.Domain.Entities.Athlete", "Athlete")
+                    b.HasOne("CrossFitWOD.Entities.Box", "Box")
+                        .WithMany("Athletes")
+                        .HasForeignKey("BoxId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CrossFitWOD.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("CrossFitWOD.Entities.Athlete", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Box");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CrossFitWOD.Entities.AthleteWorkout", b =>
+                {
+                    b.HasOne("CrossFitWOD.Entities.Athlete", "Athlete")
                         .WithMany("AthleteWorkouts")
                         .HasForeignKey("AthleteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CrossFitWOD.Domain.Entities.WorkoutSession", "WorkoutSession")
+                    b.HasOne("CrossFitWOD.Entities.WorkoutSession", "WorkoutSession")
                         .WithMany("AthleteWorkouts")
                         .HasForeignKey("WorkoutSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -215,9 +334,20 @@ namespace CrossFitWOD.Migrations
                     b.Navigation("WorkoutSession");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WodExercise", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.User", b =>
                 {
-                    b.HasOne("CrossFitWOD.Domain.Entities.Wod", "Wod")
+                    b.HasOne("CrossFitWOD.Entities.Box", "Box")
+                        .WithMany("Users")
+                        .HasForeignKey("BoxId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Box");
+                });
+
+            modelBuilder.Entity("CrossFitWOD.Entities.WodExercise", b =>
+                {
+                    b.HasOne("CrossFitWOD.Entities.Wod", "Wod")
                         .WithMany("Exercises")
                         .HasForeignKey("WodId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -226,46 +356,61 @@ namespace CrossFitWOD.Migrations
                     b.Navigation("Wod");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutResult", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WorkoutResult", b =>
                 {
-                    b.HasOne("CrossFitWOD.Domain.Entities.AthleteWorkout", "AthleteWorkout")
+                    b.HasOne("CrossFitWOD.Entities.AthleteWorkout", "AthleteWorkout")
                         .WithOne("Result")
-                        .HasForeignKey("CrossFitWOD.Domain.Entities.WorkoutResult", "AthleteWorkoutId")
+                        .HasForeignKey("CrossFitWOD.Entities.WorkoutResult", "AthleteWorkoutId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AthleteWorkout");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutSession", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WorkoutSession", b =>
                 {
-                    b.HasOne("CrossFitWOD.Domain.Entities.Wod", "Wod")
+                    b.HasOne("CrossFitWOD.Entities.Box", "Box")
+                        .WithMany()
+                        .HasForeignKey("BoxId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CrossFitWOD.Entities.Wod", "Wod")
                         .WithMany("WorkoutSessions")
                         .HasForeignKey("WodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Box");
+
                     b.Navigation("Wod");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.Athlete", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.Athlete", b =>
                 {
                     b.Navigation("AthleteWorkouts");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.AthleteWorkout", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.AthleteWorkout", b =>
                 {
                     b.Navigation("Result");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.Wod", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.Box", b =>
+                {
+                    b.Navigation("Athletes");
+
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("CrossFitWOD.Entities.Wod", b =>
                 {
                     b.Navigation("Exercises");
 
                     b.Navigation("WorkoutSessions");
                 });
 
-            modelBuilder.Entity("CrossFitWOD.Domain.Entities.WorkoutSession", b =>
+            modelBuilder.Entity("CrossFitWOD.Entities.WorkoutSession", b =>
                 {
                     b.Navigation("AthleteWorkouts");
                 });

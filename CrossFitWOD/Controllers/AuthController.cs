@@ -1,9 +1,13 @@
+using BC = BCrypt.Net.BCrypt;
 using CrossFitWOD.DTOs.Auth;
+using CrossFitWOD.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using CrossFitWOD.Services;
 
 namespace CrossFitWOD.Controllers;
 
@@ -11,28 +15,29 @@ namespace CrossFitWOD.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
+    private readonly AppDbContext  _db;
+    private readonly AuthService _auth;
     private readonly IConfiguration _config;
 
-    public AuthController(IConfiguration config) => _config = config;
-
-    /// <summary>
-    /// Devuelve un JWT con claim box_id. V1: valida contra secretos configurados en appsettings.
-    /// </summary>
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginDto dto)
+    public AuthController(AppDbContext db, IConfiguration config, AuthService authService)
     {
-        var boxSecrets = _config
-            .GetSection("Auth:BoxSecrets")
-            .Get<Dictionary<string, string>>() ?? [];
+        _db     = db;
+        _config = config;
+        _auth = authService;
+    }
 
-        var boxKey = dto.BoxId.ToString();
-        if (!boxSecrets.TryGetValue(boxKey, out var expected) || expected != dto.Secret)
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+
+        if (user is null || !BC.Verify(dto.Password, user.PasswordHash))
             return Unauthorized(new { error = "Credenciales inválidas" });
 
-        var secret  = _config["Jwt:Secret"]!;
-        var issuer  = _config["Jwt:Issuer"] ?? "CrossFitWOD";
+        var secret   = _config["Jwt:Secret"]!;
+        var issuer   = _config["Jwt:Issuer"]   ?? "CrossFitWOD";
         var audience = _config["Jwt:Audience"] ?? "CrossFitWOD";
-        var expiry  = int.TryParse(_config["Jwt:ExpiryMinutes"], out var m) ? m : 1440;
+        var expiry   = int.TryParse(_config["Jwt:ExpiryMinutes"], out var m) ? m : 1440;
 
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -40,11 +45,38 @@ public class AuthController : ControllerBase
         var token = new JwtSecurityToken(
             issuer:             issuer,
             audience:           audience,
-            claims:             [new Claim("box_id", boxKey)],
+            claims:             [
+                new Claim("user_id",         user.Id.ToString()),
+                new Claim(ClaimTypes.Role,   user.Role),
+            ],
             expires:            DateTime.UtcNow.AddMinutes(expiry),
             signingCredentials: creds
         );
 
-        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+        return Ok(new
+        {
+            token = new JwtSecurityTokenHandler().WriteToken(token),
+            role  = user.Role,
+        });
     }
+
+    [HttpPost("registro")]
+    public async Task<IActionResult> Registro([FromBody] RegisterRequest request)
+    {
+        if(string.IsNullOrWhiteSpace(request.Username) ||
+            string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest("Username y contraseña son requeridos.");
+
+        try
+        {
+            var result = await _auth.RegistroAsync(request);
+            return CreatedAtAction(nameof(Registro), result);
+        }
+        catch(InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
+
 }

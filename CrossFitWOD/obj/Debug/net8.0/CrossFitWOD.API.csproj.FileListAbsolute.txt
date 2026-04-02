@@ -113,3 +113,15 @@ E:\Proyectos\WODs\CrossFitWOD\obj\Debug\net8.0\refint\CrossFitWOD.API.dll
 E:\Proyectos\WODs\CrossFitWOD\obj\Debug\net8.0\CrossFitWOD.API.pdb
 E:\Proyectos\WODs\CrossFitWOD\obj\Debug\net8.0\CrossFitWOD.API.genruntimeconfig.cache
 E:\Proyectos\WODs\CrossFitWOD\obj\Debug\net8.0\ref\CrossFitWOD.API.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\FluentValidation.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\FluentValidation.AspNetCore.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\FluentValidation.DependencyInjectionExtensions.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\BCrypt.Net-Next.dll

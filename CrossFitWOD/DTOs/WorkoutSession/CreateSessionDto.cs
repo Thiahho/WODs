@@ -1,3 +1,3 @@
 namespace CrossFitWOD.DTOs.WorkoutSession;
 
-public record CreateSessionDto(Guid WodId, DateOnly Date);
+public record CreateSessionDto(int WodId, DateOnly Date);

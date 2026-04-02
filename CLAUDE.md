@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides intance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
 
@@ -23,9 +23,9 @@ Todos los comandos se ejecutan desde `CrossFitWOD/`.
 ### Backend
 ```bash
 dotnet build
-dotnet run --project CrossFitWOD.API          # arranca en http://localhost:5290, Swagger en /swagger
-dotnet ef migrations add <Name> --project CrossFitWOD.Infrastructure --startup-project CrossFitWOD.API
-dotnet ef database update --project CrossFitWOD.Infrastructure --startup-project CrossFitWOD.API
+dotnet run                        # arranca en http://localhost:5290, Swagger en /swagger
+dotnet ef migrations add <Name>   # proyecto único, no hacen falta flags --project
+dotnet ef database update
 ```
 
 ### Frontend (pendiente — carpeta CrossFitWOD.Web no creada aún)
@@ -40,11 +40,17 @@ npm run lint
 
 ### Solution structure
 ```
-CrossFitWOD/
-├── CrossFitWOD.API/            — Controllers, Middleware, Program.cs
-├── CrossFitWOD.Application/    — Services, DTOs (referencia Infrastructure por diseño del spec)
-├── CrossFitWOD.Domain/         — Entities, Enums, Exceptions
-├── CrossFitWOD.Infrastructure/ — AppDbContext, Migrations, DbSeeder
+CrossFitWOD/                    — proyecto único (CrossFitWOD.API.csproj)
+├── Controllers/
+├── DTOs/
+├── Entities/
+├── Enums/
+├── Exceptions/
+├── Middleware/
+├── Migrations/
+├── Persistence/                — AppDbContext, DbSeeder, DesignTimeDbContextFactory
+├── Services/
+├── Program.cs
 └── CrossFitWOD.Web/            — Next.js 14 (pendiente)
 ```
 
@@ -63,8 +69,8 @@ Logic lives in `WorkoutResultService.AdjustNextFactor()` and `AthleteWorkoutServ
 - One `AthleteWorkout` per athlete per session (`AthleteId + WorkoutSessionId` unique)
 - One `WorkoutResult` per `AthleteWorkout`
 
-### IHttpContextAccessor en Infrastructure
-`AppDbContext` depende de `IHttpContextAccessor` para extraer el `box_id` del JWT. En classlib esto requiere el paquete `Microsoft.AspNetCore.Http.Abstractions`. La `DesignTimeDbContextFactory` usa una implementación inline `NullHttpContextAccessor` (HttpContext = null → boxId = Guid.Empty) para que `dotnet ef migrations add` funcione sin HTTP context.
+### IHttpContextAccessor
+`AppDbContext` depende de `IHttpContextAccessor` para extraer el `box_id` del JWT. La `DesignTimeDbContextFactory` en `Persistence/` usa una implementación inline `NullHttpContextAccessor` (HttpContext = null → boxId = int.Empty) para que `dotnet ef migrations add` funcione sin HTTP context.
 
 ### Seed de desarrollo
 `DbSeeder.SeedAsync()` corre en Program.cs solo en `Development`. Es idempotente (verifica con `IgnoreQueryFilters().AnyAsync()`). Crea:

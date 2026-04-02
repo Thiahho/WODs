@@ -14,13 +14,14 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Database ─────────────────────────────────────────────────────────────────
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 // ── Application services ──────────────────────────────────────────────────────
 builder.Services.AddScoped<AthleteWorkoutService>();
 builder.Services.AddScoped<WorkoutResultService>();
+builder.Services.AddScoped<WodGeneratorService>();
+builder.Services.AddScoped<AuthService>();
 
 // ── Authentication / JWT ──────────────────────────────────────────────────────
 var jwtSecret  = builder.Configuration["Jwt:Secret"]
@@ -66,7 +67,9 @@ builder.Services.AddRateLimiter(opts =>
 });
 
 // ── MVC + Swagger ─────────────────────────────────────────────────────────────
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.ReferenceHandler =
+        System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -94,19 +97,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
+var corsOrigins = (builder.Configuration["Cors:Origins"] ?? "http://localhost:3000")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(opt => opt.AddPolicy("dev", p =>
-    p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod()));
+    p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 // ─────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(db);
-}
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors("dev");
