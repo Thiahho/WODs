@@ -6,7 +6,17 @@ public class AthleteWodResponseDto
     public int    AthleteId        { get; set; }
     public int    WorkoutSessionId { get; set; }
     public float  ScaledRepsFactor { get; set; }
-    public WorkoutSessionDto WorkoutSession { get; set; } = null!;
+    public WorkoutSessionDto  WorkoutSession { get; set; } = null!;
+    public ResultSummaryDto?  Result         { get; set; }
+}
+
+public class ResultSummaryDto
+{
+    public bool   Completed     { get; set; }
+    public int?   TimeSeconds   { get; set; }
+    public float? Rounds        { get; set; }
+    public int    Rpe           { get; set; }
+    public string FactorMessage { get; set; } = string.Empty;
 }
 
 public class WorkoutSessionDto
