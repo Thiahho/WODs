@@ -247,3 +247,9 @@ C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\refint\Cro
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\CrossFitWOD.API.pdb
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\CrossFitWOD.API.genruntimeconfig.cache
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\ref\CrossFitWOD.API.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
+C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
