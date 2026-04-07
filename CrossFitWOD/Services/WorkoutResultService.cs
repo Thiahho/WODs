@@ -4,14 +4,22 @@ using CrossFitWOD.Enums;
 using CrossFitWOD.Exceptions;
 using CrossFitWOD.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CrossFitWOD.Services;
 
 public class WorkoutResultService
 {
-    private readonly AppDbContext _db;
+    private readonly AppDbContext          _db;
+    private readonly AthleteStatusService  _statusService;
+    private readonly ILogger<WorkoutResultService> _logger;
 
-    public WorkoutResultService(AppDbContext db) => _db = db;
+    public WorkoutResultService(AppDbContext db, AthleteStatusService statusService, ILogger<WorkoutResultService> logger)
+    {
+        _db            = db;
+        _statusService = statusService;
+        _logger        = logger;
+    }
 
     public async Task<WorkoutResultResponseDto> RegisterAsync(RegisterResultDto dto, int userId)
     {
@@ -37,7 +45,9 @@ public class WorkoutResultService
             Completed        = dto.Completed,
             TimeSeconds      = dto.TimeSeconds,
             Rounds           = dto.Rounds,
-            Rpe              = dto.Rpe
+            Rpe              = dto.Rpe,
+            DurationSeconds  = dto.DurationSeconds,
+            Notes            = dto.Notes
         };
 
         _db.WorkoutResults.Add(result);
@@ -48,6 +58,14 @@ public class WorkoutResultService
         var newFactor      = athleteWorkout.ScaledRepsFactor;
 
         await _db.SaveChangesAsync();
+
+        // Recalcular estado del atleta en background (no bloquea la respuesta)
+        var athleteId = athleteWorkout.Athlete.Id;
+        _ = Task.Run(async () =>
+        {
+            try   { await _statusService.RecalculateAsync(athleteId); }
+            catch (Exception ex) { _logger.LogError(ex, "Error recalculando AthleteStatus para atleta {AthleteId}", athleteId); }
+        });
 
         return new WorkoutResultResponseDto(
             Id:                  result.Id,

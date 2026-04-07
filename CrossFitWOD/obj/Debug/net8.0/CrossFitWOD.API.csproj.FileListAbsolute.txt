@@ -253,3 +253,8 @@ C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
 C:\Users\thiag\source\repos\Thiahho\WODs\CrossFitWOD\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
+E:\Proyectos\WODs\CrossFitWOD\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll

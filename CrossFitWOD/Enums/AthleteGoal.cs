@@ -1,6 +1,8 @@
 namespace CrossFitWOD.Enums;
 
-public enum AthleteGoal
+public enum 
+
+AthleteGoal
 {
     General        = 1,
     Fitness        = 2,

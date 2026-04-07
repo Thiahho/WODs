@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "uB/mHP8CoWQ=",
+  "dgSpecHash": "2BA+EBRRgro=",
   "success": true,
-  "projectFilePath": "e:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
+  "projectFilePath": "E:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\thexe\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\Users\\thexe\\.nuget\\packages\\fluentvalidation\\11.5.1\\fluentvalidation.11.5.1.nupkg.sha512",

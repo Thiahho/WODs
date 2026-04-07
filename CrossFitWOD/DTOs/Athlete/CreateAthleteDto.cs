@@ -5,7 +5,7 @@ namespace CrossFitWOD.DTOs.Athlete;
 public record CreateAthleteDto(
     string      Name,
     AthleteLevel Level,
-    AthleteGoal  Goal,
+    AthleteGoal Goal,
     float?       Weight,
     int          DaysPerWeek            = 3,
     int          SessionDurationMinutes = 45,

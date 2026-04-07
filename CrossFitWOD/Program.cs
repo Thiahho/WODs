@@ -22,6 +22,9 @@ builder.Services.AddScoped<AthleteWorkoutService>();
 builder.Services.AddScoped<WorkoutResultService>();
 builder.Services.AddScoped<WodGeneratorService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AiWodService>();
+builder.Services.AddScoped<AthleteStatusService>();
+builder.Services.AddHttpClient("openai");
 
 // ── Authentication / JWT ──────────────────────────────────────────────────────
 var jwtSecret  = builder.Configuration["Jwt:Secret"]

@@ -15,7 +15,10 @@ public class AppDbContext : DbContext
     public DbSet<WodExercise> WodExercises => Set<WodExercise>();
     public DbSet<WorkoutSession> WorkoutSessions => Set<WorkoutSession>();
     public DbSet<AthleteWorkout> AthleteWorkouts => Set<AthleteWorkout>();
-    public DbSet<WorkoutResult> WorkoutResults => Set<WorkoutResult>();
+    public DbSet<WorkoutResult>   WorkoutResults  => Set<WorkoutResult>();
+    public DbSet<AthleteDailyLogs> AthleteDailyLogs => Set<AthleteDailyLogs>();
+    public DbSet<AthleteStates>    AthleteStates    => Set<AthleteStates>();
+    public DbSet<AthleteStatus>    AthleteStatuses  => Set<AthleteStatus>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -82,5 +85,23 @@ public class AppDbContext : DbContext
         b.Entity<WorkoutResult>()
             .HasIndex(r => r.AthleteWorkoutId)
             .IsUnique();
+
+        // ── AthleteDailyLogs ─────────────────────────────────────────────
+        b.Entity<AthleteDailyLogs>()
+            .HasOne(d => d.Athlete)
+            .WithMany(a => a.DailyLogs)
+            .HasForeignKey(d => d.AthleteId);
+
+        // ── AthleteStates ────────────────────────────────────────────────
+        b.Entity<AthleteStates>()
+            .HasOne(s => s.Athlete)
+            .WithMany(a => a.PhysicalLogs)
+            .HasForeignKey(s => s.AthleteId);
+
+        // ── AthleteStatus ────────────────────────────────────────────────
+        b.Entity<AthleteStatus>()
+            .HasOne(s => s.Athlete)
+            .WithMany(a => a.Statuses)
+            .HasForeignKey(s => s.AthleteId);
     }
 }

@@ -36,10 +36,13 @@ public class AuthService
         _db.Boxes.Add(box);
         await _db.SaveChangesAsync();
 
+        var hora = DateTime.UtcNow;
+
         var user = new User
         {
             Username     = request.Username,
             PasswordHash = BC.HashPassword(request.Password, workFactor: 12),
+            CreatedAt    = hora,
             Role         = request.IsCoach ? "admin" : "athlete",
             BoxId        = box.Id
         };

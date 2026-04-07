@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrossFitWOD.Entities;
 
-[Table("User")]
+[Table("Users")]
 public class User
 {
     [Column("id")]
@@ -11,9 +11,14 @@ public class User
     public string Username     { get; set; } = string.Empty;
     [Column("passwordhash")]
     public string PasswordHash { get; set; } = string.Empty;
+    
+    [Column("createdat")]
+    public DateTime CreatedAt { get; set; } = DateTime.Today;
     [Column("role")]
     public string Role         { get; set; } = "athlete";
     [Column("boxid")]
     public int    BoxId        { get; set; }
+
+   
     public Box    Box          { get; set; } = null!;
 }

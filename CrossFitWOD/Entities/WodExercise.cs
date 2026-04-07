@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrossFitWOD.Entities;
 
-[Table("WodExercise")]
+[Table("WodExercises")]
 public class WodExercise
 {
     [Column("id")]

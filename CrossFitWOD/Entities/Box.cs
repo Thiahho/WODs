@@ -3,7 +3,7 @@ using CrossFitWOD.Enums;
 
 namespace CrossFitWOD.Entities;
 
-[Table("Box")]
+[Table("Boxes")]
 public class Box
 {
     [Column("id")]

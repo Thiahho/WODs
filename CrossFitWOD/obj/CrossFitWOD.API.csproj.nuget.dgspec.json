@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "e:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj": {}
+    "E:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj": {}
   },
   "projects": {
-    "e:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj": {
+    "E:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "e:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
+        "projectUniqueName": "E:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
         "projectName": "CrossFitWOD.API",
-        "projectPath": "e:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
+        "projectPath": "E:\\Proyectos\\WODs\\CrossFitWOD\\CrossFitWOD.API.csproj",
         "packagesPath": "C:\\Users\\thexe\\.nuget\\packages\\",
-        "outputPath": "e:\\Proyectos\\WODs\\CrossFitWOD\\obj\\",
+        "outputPath": "E:\\Proyectos\\WODs\\CrossFitWOD\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Herramientas\\NuGetPackages"

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrossFitWOD.Entities;
 
-[Table("workoutresult")]
+[Table("WorkoutResults")]
 public class WorkoutResult
 {
     [Column("id")]
@@ -12,11 +12,11 @@ public class WorkoutResult
     public int AthleteWorkoutId { get; set; }
     [Column("completed")]
     public bool Completed { get; set; }
-    [Column("timesecords")]
+    [Column("timeseconds")]
     public int? TimeSeconds { get; set; }
     [Column("rounds")]
     public float? Rounds { get; set; }
-    [Column("durationsecords")]
+    [Column("durationseconds")]
     public int  DurationSeconds { get; set; }
     [Column("rpe")]
     public int  Rpe { get; set; }

@@ -1,24 +1,30 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using CrossFitWOD.Enums;
 
 namespace CrossFitWOD.Entities;
 
+/// <summary>Mediciones físicas del atleta (peso, composición corporal)</summary>
 [Table("AthleteStates")]
 public class AthleteStates
 {
     [Column("id")]
     [Required]
     public int Id { get; set; }
+
     [Column("athleteid")]
     public int AthleteId { get; set; }
+
     [Column("weight")]
-    public string Weight{ get; set; } = string.Empty;
-    [Column("bodyfast")]
-    public string BodyFat { get; set; } = string.Empty;
+    public float? Weight { get; set; }
+
+    [Column("bodyfat")]
+    public float? BodyFat { get; set; }
+
     [Column("musclemass")]
-    public string MuscleMass { get; set; } = string.Empty;
-    [Column("recordedats")]
+    public float? MuscleMass { get; set; }
+
+    [Column("recordedat")]
     public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 
+    public Athlete Athlete { get; set; } = null!;
 }

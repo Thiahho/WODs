@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+// ── AI WOD ────────────────────────────────────────────────────────────────────
+
+// Cubre tanto AiWodResponseDto (POST /generate) como WodDetailDto (GET /today)
+export const AiWodSchema = z.object({
+  wodId:            z.number(),
+  workoutSessionId: z.number().optional(),   // POST /generate
+  sessionId:        z.number().nullable().optional(), // GET /today
+  title:            z.string(),
+  intensity:        z.string().nullable().optional(),
+  focus:            z.string().nullable().optional(),
+  durationMinutes:  z.number(),
+  warmUp:           z.string().nullable().optional(),
+  strengthSkill:    z.string().nullable().optional(),
+  metcon:           z.string().nullable().optional(),
+  scaling:          z.string().nullable().optional(),
+  coolDown:         z.string().nullable().optional(),
+  coachNotes:       z.string().nullable().optional(),
+  alert:            z.string().nullable().optional(),
+  nutritionTip:     z.string().nullable().optional(),
+});
+
+export type AiWod = z.infer<typeof AiWodSchema>;
+
 // ── API response shapes ───────────────────────────────────────────────────────
 
 export const WodExerciseSchema = z.object({
@@ -33,10 +56,12 @@ export const TodayWorkoutSchema = z.object({
 // ── Form schemas ──────────────────────────────────────────────────────────────
 
 export const RegisterResultSchema = z.object({
-  completed:   z.boolean(),
-  rpe:         z.number().min(1).max(10),
-  timeSeconds: z.number().positive().optional(),
-  rounds:      z.number().positive().optional(),
+  completed:       z.boolean(),
+  rpe:             z.number().min(1).max(10),
+  timeSeconds:     z.number().positive().optional(),
+  rounds:          z.number().positive().optional(),
+  durationSeconds: z.number().min(0).default(0),
+  notes:           z.string().optional(),
 });
 
 export const LoginSchema = z.object({

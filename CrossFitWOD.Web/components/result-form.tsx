@@ -144,6 +144,34 @@ export function ResultForm({ athleteWorkoutId, wodType, onSuccess }: ResultFormP
         </div>
       )}
 
+      {/* Duración real de la sesión */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-zinc-300">
+          Duración total <span className="text-zinc-500">(minutos)</span>
+        </label>
+        <input
+          type="number"
+          min={1}
+          placeholder="ej. 45"
+          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          onChange={e => setValue("durationSeconds", Math.round(parseFloat(e.target.value || "0") * 60))}
+        />
+      </div>
+
+      {/* Notas post-WOD */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-zinc-300">
+          💬 ¿Cómo te fue? <span className="text-zinc-500">(opcional)</span>
+        </label>
+        <textarea
+          rows={2}
+          placeholder="ej: me costó mucho el metcon, el hombro bien, quiero más peso la próxima"
+          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+          {...register("notes")}
+        />
+        <p className="text-xs text-zinc-600">La IA usa esto para el WOD del próximo día.</p>
+      </div>
+
       {serverError && (
         <p className="rounded-lg bg-red-900/40 px-3 py-2 text-sm text-red-300">
           {serverError}
