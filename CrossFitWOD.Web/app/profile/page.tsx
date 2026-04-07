@@ -2,16 +2,18 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
 import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { cn } from "@/lib/cn";
 import { useState } from "react";
+import { User, CheckCircle2 } from "lucide-react";
 
 const LEVELS = [
-  { value: 1, label: "Principiante" },
-  { value: 2, label: "Intermedio"   },
-  { value: 3, label: "Avanzado"     },
+  { value: 1, label: "Principiante", icon: "🌱" },
+  { value: 2, label: "Intermedio",   icon: "⚡" },
+  { value: 3, label: "Avanzado",     icon: "🔥" },
 ];
 const GOALS = [
   { value: 1, label: "General",        desc: "Mantenerme activo y saludable" },
@@ -21,45 +23,42 @@ const GOALS = [
 ];
 const DAYS      = [2, 3, 4, 5, 6];
 const DURATIONS = [
-  { value: 30, label: "30 min" },
-  { value: 45, label: "45 min" },
-  { value: 60, label: "60 min" },
-  { value: 90, label: "90 min" },
+  { value: 30, label: "30m" },
+  { value: 45, label: "45m" },
+  { value: 60, label: "60m" },
+  { value: 90, label: "90m" },
 ];
 const EQUIPMENT = [
-  { value: "barbell",    label: "Barra"        },
-  { value: "pullup_bar", label: "Barra de pull" },
-  { value: "rings",      label: "Anillas"      },
-  { value: "box",        label: "Cajón"        },
-  { value: "kettlebell", label: "Kettlebell"   },
-  { value: "rower",      label: "Remo"         },
+  { value: "barbell",    label: "Barra"      },
+  { value: "pullup_bar", label: "Barra Pull" },
+  { value: "rings",      label: "Anillas"    },
+  { value: "box",        label: "Cajón"      },
+  { value: "kettlebell", label: "Kettlebell" },
+  { value: "rower",      label: "Remo"       },
 ];
 const WEAK_POINTS = [
-  { value: "gymnastics",    label: "Gimnasia"      },
-  { value: "weightlifting", label: "Halterofilia"  },
-  { value: "cardio",        label: "Cardio"        },
-  { value: "strength",      label: "Fuerza"        },
-  { value: "flexibility",   label: "Flexibilidad"  },
+  { value: "gymnastics",    label: "Gimnasia"     },
+  { value: "weightlifting", label: "Halterofilia" },
+  { value: "cardio",        label: "Cardio"       },
+  { value: "strength",      label: "Fuerza"       },
+  { value: "flexibility",   label: "Flexibilidad" },
 ];
 
 interface AthleteProfile {
-  id:                    number;
-  name:                  string;
-  level:                 number;
-  goal:                  number;
-  weight:                number | null;
-  daysPerWeek:           number;
-  sessionDurationMinutes: number;
-  equipment:             string;
-  weakPoints:            string;
-  injuryHistory:         string | null;
-  commitmentLevel:       number;
+  id: number; name: string; level: number; goal: number;
+  weight: number | null; daysPerWeek: number;
+  sessionDurationMinutes: number; equipment: string;
+  weakPoints: string; injuryHistory: string | null;
+  commitmentLevel: number;
 }
 
+const inputClass = "w-full rounded-2xl border border-surface-border bg-surface-raised px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30";
+const labelClass = "text-[10px] font-semibold uppercase tracking-widest text-zinc-500";
+const sectionClass = "rounded-3xl border border-surface-border bg-surface p-4 space-y-4";
+
 export default function ProfilePage() {
-  const router = useRouter();
-  const [serverError, setServerError]   = useState<string | null>(null);
-  const [saved,       setSaved]         = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [saved,       setSaved]       = useState(false);
 
   const { data: profile, isLoading } = useQuery<AthleteProfile>({
     queryKey: ["my-profile"],
@@ -67,13 +66,10 @@ export default function ProfilePage() {
   });
 
   const {
-    register,
-    handleSubmit,
-    control,
-    watch,
+    register, handleSubmit, control, watch,
     formState: { errors, isSubmitting },
   } = useForm<SetupProfileForm>({
-    resolver:      zodResolver(SetupProfileSchema),
+    resolver: zodResolver(SetupProfileSchema),
     values: profile ? {
       name:                   profile.name,
       level:                  profile.level,
@@ -105,105 +101,110 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-700" />
+        <div className="h-10 w-10 animate-pulse rounded-full bg-brand/20 border border-brand/30" />
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-orange-500">Editar perfil</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">Tus cambios afectan el WOD generado</p>
+    <main className="min-h-screen px-4 pt-6">
+      <div className="mx-auto max-w-md space-y-6">
+
+        {/* Header with avatar */}
+        <header className="flex items-center gap-4">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-brand bg-brand/10 shadow-glow-sm">
+            <User className="h-6 w-6 text-brand" />
           </div>
-          <button
-            onClick={() => router.push("/workout")}
-            className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            ← Volver
-          </button>
-        </div>
+          <div>
+            <h1 className="text-display text-3xl text-zinc-50">{profile?.name ?? "Atleta"}</h1>
+            <p className="text-xs text-zinc-500">Editar perfil</p>
+          </div>
+        </header>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Nombre</label>
-            <input
-              type="text"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              {...register("name")}
-            />
+          {/* Nombre */}
+          <div className={sectionClass}>
+            <label className={labelClass}>Nombre</label>
+            <input type="text" className={inputClass} {...register("name")} />
             {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Nivel</label>
+          {/* Nivel */}
+          <div className={sectionClass}>
+            <label className={labelClass}>Nivel CrossFit</label>
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
-                <label key={l.value} className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-center has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
+                <label key={l.value} className="cursor-pointer">
                   <input type="radio" value={l.value} className="sr-only" {...register("level")} />
-                  <span className="text-xs font-medium text-zinc-300">{l.label}</span>
+                  <div className="flex flex-col items-center gap-1 rounded-2xl border border-surface-border bg-surface-raised py-2.5 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <span className="text-lg">{l.icon}</span>
+                    <span className="text-[11px] font-semibold text-zinc-300">{l.label}</span>
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Objetivo</label>
+          {/* Objetivo */}
+          <div className={sectionClass}>
+            <label className={labelClass}>Objetivo</label>
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
-                <label key={g.value} className="flex cursor-pointer flex-col gap-0.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
+                <label key={g.value} className="cursor-pointer">
                   <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
-                  <span className="text-xs font-medium text-zinc-200">{g.label}</span>
-                  <span className="text-[11px] text-zinc-500">{g.desc}</span>
+                  <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
+                    <span className="text-[10px] text-zinc-500">{g.desc}</span>
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Peso corporal <span className="text-zinc-500">(kg, opcional)</span></label>
-            <input
-              type="number"
-              step="0.1"
-              min="1"
-              placeholder="75"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              {...register("weight")}
-            />
+          {/* Peso */}
+          <div className={sectionClass}>
+            <label className={labelClass}>
+              Peso corporal <span className="normal-case font-normal text-zinc-600">(kg, opcional)</span>
+            </label>
+            <input type="number" step="0.1" min="1" placeholder="75" className={inputClass} {...register("weight")} />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Días de entrenamiento por semana</label>
-            <div className="flex gap-2">
-              {DAYS.map((d) => (
-                <label key={d} className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
-                  <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
-                  <span className="text-sm font-medium text-zinc-200">{d}</span>
-                </label>
-              ))}
+          {/* Días + Duración */}
+          <div className={sectionClass}>
+            <div className="space-y-3">
+              <label className={labelClass}>Días / semana</label>
+              <div className="flex gap-2">
+                {DAYS.map((d) => (
+                  <label key={d} className="flex-1 cursor-pointer">
+                    <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
+                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                      <span className="text-sm font-bold text-zinc-200">{d}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <label className={labelClass}>Duración de sesión</label>
+              <div className="grid grid-cols-4 gap-2">
+                {DURATIONS.map((d) => (
+                  <label key={d.value} className="cursor-pointer">
+                    <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
+                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                      <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Duración de sesión</label>
-            <div className="grid grid-cols-4 gap-2">
-              {DURATIONS.map((d) => (
-                <label key={d.value} className="flex cursor-pointer items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
-                  <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
-                  <span className="text-xs font-medium text-zinc-200">{d.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Equipamiento disponible</label>
+          {/* Equipment */}
+          <div className={sectionClass}>
+            <label className={labelClass}>Equipamiento</label>
             <Controller
-              name="equipment"
-              control={control}
+              name="equipment" control={control}
               render={({ field }) => {
                 const selected = field.value ? field.value.split(",").filter(Boolean) : [];
                 const toggle = (v: string) => {
@@ -214,7 +215,12 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap gap-2">
                     {EQUIPMENT.map((e) => (
                       <button key={e.value} type="button" onClick={() => toggle(e.value)}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${selected.includes(e.value) ? "border-orange-500 bg-orange-500/10 text-orange-300" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                          selected.includes(e.value)
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-surface-border text-zinc-500 hover:border-zinc-600"
+                        )}>
                         {e.label}
                       </button>
                     ))}
@@ -224,11 +230,11 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Puntos débiles</label>
+          {/* Weak points */}
+          <div className={sectionClass}>
+            <label className={labelClass}>Puntos débiles</label>
             <Controller
-              name="weakPoints"
-              control={control}
+              name="weakPoints" control={control}
               render={({ field }) => {
                 const selected = field.value ? field.value.split(",").filter(Boolean) : [];
                 const toggle = (v: string) => {
@@ -239,7 +245,12 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap gap-2">
                     {WEAK_POINTS.map((w) => (
                       <button key={w.value} type="button" onClick={() => toggle(w.value)}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${selected.includes(w.value) ? "border-orange-500 bg-orange-500/10 text-orange-300" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                          selected.includes(w.value)
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-surface-border text-zinc-500 hover:border-zinc-600"
+                        )}>
                         {w.label}
                       </button>
                     ))}
@@ -249,60 +260,54 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Commitment level slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <label className="font-medium text-zinc-300">
-                Nivel de compromiso
-              </label>
-              <span className="font-bold text-orange-400">{commitmentValue}/10</span>
+          {/* Commitment */}
+          <div className={sectionClass}>
+            <div className="flex items-center justify-between">
+              <label className={labelClass}>Nivel de compromiso</label>
+              <span className="text-display text-3xl text-brand">{commitmentValue}/10</span>
             </div>
             <input
-              type="range"
-              min={1}
-              max={10}
-              step={1}
-              className="w-full accent-orange-500"
+              type="range" min={1} max={10} step={1}
               {...register("commitmentLevel", { valueAsNumber: true })}
             />
-            <div className="flex justify-between text-xs text-zinc-500">
+            <div className="flex justify-between text-[10px] font-medium uppercase tracking-wider text-zinc-600">
               <span>Casual</span>
               <span>Full commitment</span>
             </div>
-            <p className="text-xs text-zinc-600">La IA usa esto para calibrar la intensidad y el volumen.</p>
+            <p className="text-[10px] text-zinc-600">La IA calibra la intensidad y el volumen con esto.</p>
           </div>
 
-          {/* Historial de lesiones */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">
-              Historial de lesiones <span className="text-zinc-500">(opcional)</span>
+          {/* Injury history */}
+          <div className={sectionClass}>
+            <label className={labelClass}>
+              Historial de lesiones <span className="normal-case font-normal text-zinc-600">(opcional)</span>
             </label>
             <textarea
               rows={3}
-              placeholder="ej: hombro derecho operado en 2022, rodilla izquierda con molestia al correr..."
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+              placeholder="ej: hombro derecho operado en 2022, rodilla izquierda con molestia al correr…"
+              className={`${inputClass} resize-none`}
               {...register("injuryHistory")}
             />
-            <p className="text-xs text-zinc-600">La IA evita movimientos que puedan agravar lesiones activas.</p>
+            <p className="text-[10px] text-zinc-600">La IA evita movimientos que puedan agravar lesiones activas.</p>
           </div>
 
           {saved && (
-            <p className="rounded-lg bg-emerald-900/30 border border-emerald-700/40 px-3 py-2 text-sm text-emerald-300">
-              Perfil actualizado correctamente.
-            </p>
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              <p className="text-sm text-emerald-300">Perfil actualizado correctamente.</p>
+            </div>
           )}
           {serverError && (
-            <p className="rounded-lg bg-red-900/40 px-3 py-2 text-sm text-red-300">{serverError}</p>
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {serverError}
+            </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
-          >
+          <PrimaryButton type="submit" disabled={isSubmitting} size="lg">
             {isSubmitting ? "Guardando…" : "Guardar cambios"}
-          </button>
+          </PrimaryButton>
         </form>
+
       </div>
     </main>
   );

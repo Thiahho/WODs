@@ -2,9 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { Chip } from "@/components/ui/chip";
+import { cn } from "@/lib/cn";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { HistoryEntry } from "@/hooks/use-history";
+import { ChevronDown, ChevronUp, UserPlus, X } from "lucide-react";
 
 interface AthleteListItem {
   id:              number;
@@ -32,7 +36,7 @@ function factorLabel(factor: number): string {
 
 function rpeColor(rpe: number): string {
   if (rpe <= 6) return "text-emerald-400";
-  if (rpe <= 8) return "text-orange-400";
+  if (rpe <= 8) return "text-yellow-400";
   return "text-red-400";
 }
 
@@ -63,35 +67,37 @@ function AthleteHistory({ athleteId }: { athleteId: number }) {
     if (page.length < HISTORY_PAGE) setHasMore(false);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (isLoading && all.length === 0) return <div className="py-4 animate-pulse text-xs text-zinc-500">Cargando...</div>;
-  if (!isLoading && all.length === 0) return <p className="py-3 text-xs text-zinc-500">Sin resultados registrados.</p>;
+  if (isLoading && all.length === 0) return (
+    <div className="py-4 animate-pulse text-xs text-zinc-500">Cargando historial…</div>
+  );
+  if (!isLoading && all.length === 0) return (
+    <p className="py-3 text-xs text-zinc-500">Sin resultados registrados.</p>
+  );
 
   return (
     <div className="mt-3 space-y-2">
       {all.map((entry, i) => (
-        <div key={i} className="grid grid-cols-4 gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs">
+        <div key={i} className="grid grid-cols-4 gap-2 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 text-xs">
           <div>
-            <p className="text-zinc-500">Fecha</p>
-            <p className="text-zinc-300 mt-0.5">
-              {new Date(entry.date + "T00:00:00").toLocaleDateString("es", {
-                day: "numeric", month: "short",
-              })}
+            <p className="text-zinc-600">Fecha</p>
+            <p className="text-zinc-300 mt-0.5 font-medium">
+              {new Date(entry.date + "T00:00:00").toLocaleDateString("es", { day: "numeric", month: "short" })}
             </p>
           </div>
           <div>
-            <p className="text-zinc-500">WOD</p>
-            <p className="text-zinc-300 mt-0.5 truncate">{entry.wodTitle}</p>
+            <p className="text-zinc-600">WOD</p>
+            <p className="text-zinc-300 mt-0.5 truncate font-medium">{entry.wodTitle}</p>
           </div>
           <div>
-            <p className="text-zinc-500">Resultado</p>
-            <p className="text-zinc-300 mt-0.5">
+            <p className="text-zinc-600">Resultado</p>
+            <p className="text-zinc-300 mt-0.5 font-medium">
               {entry.wodType === "ForTime"
                 ? entry.timeSeconds ? formatTime(entry.timeSeconds) : (entry.completed ? "—" : "DNF")
-                : entry.rounds != null ? `${entry.rounds} rondas` : "—"}
+                : entry.rounds != null ? `${entry.rounds}r` : "—"}
             </p>
           </div>
           <div>
-            <p className="text-zinc-500">RPE / Vol.</p>
+            <p className="text-zinc-600">RPE / Vol.</p>
             <p className="mt-0.5">
               <span className={`font-bold ${rpeColor(entry.rpe)}`}>{entry.rpe}</span>
               <span className="text-zinc-500"> · {Math.round(entry.scaledRepsFactor * 100)}%</span>
@@ -100,13 +106,14 @@ function AthleteHistory({ athleteId }: { athleteId: number }) {
         </div>
       ))}
       {hasMore && (
-        <button
+        <PrimaryButton
+          variant="ghost"
+          size="sm"
           onClick={() => setSkip(s => s + HISTORY_PAGE)}
           disabled={isFetching}
-          className="w-full rounded-lg border border-zinc-700 py-2 text-xs text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
         >
           {isFetching ? "Cargando…" : "Ver más"}
-        </button>
+        </PrimaryButton>
       )}
     </div>
   );
@@ -120,6 +127,9 @@ interface CreateAthleteForm {
   goal:     number;
   weight:   string;
 }
+
+const inputClass = "w-full rounded-2xl border border-surface-border bg-surface px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30";
+const selectClass = "w-full rounded-2xl border border-surface-border bg-surface px-4 py-3 text-sm text-zinc-100 outline-none transition-colors focus:border-brand";
 
 function CreateAthleteModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -144,67 +154,56 @@ function CreateAthleteModal({ onClose }: { onClose: () => void }) {
       if (err instanceof ApiError && err.status === 409) {
         setServerError("El nombre de usuario ya está en uso.");
       } else {
-        setServerError("No se pudo crear el atleta. Intenta de nuevo.");
+        setServerError("No se pudo crear el atleta. Intentá de nuevo.");
       }
     },
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-6 space-y-5">
-        <h2 className="text-lg font-bold text-zinc-100">Agregar atleta</h2>
-        <form onSubmit={handleSubmit((d) => { setServerError(null); mutation.mutate(d); })} className="space-y-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-3xl border border-surface-border bg-surface p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-display text-2xl text-zinc-50">Agregar atleta</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
+        <form onSubmit={handleSubmit((d) => { setServerError(null); mutation.mutate(d); })} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-400">Usuario</label>
-              <input
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="usuario"
-                {...register("username", { required: "Requerido", minLength: { value: 3, message: "Mín. 3 chars" } })}
-              />
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Usuario</label>
+              <input className={inputClass} placeholder="usuario"
+                {...register("username", { required: "Requerido", minLength: { value: 3, message: "Mín. 3 chars" } })} />
               {errors.username && <p className="text-xs text-red-400">{errors.username.message}</p>}
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-400">Contraseña</label>
-              <input
-                type="password"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="••••••"
-                {...register("password", { required: "Requerido", minLength: { value: 6, message: "Mín. 6 chars" } })}
-              />
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Contraseña</label>
+              <input type="password" className={inputClass} placeholder="••••••"
+                {...register("password", { required: "Requerido", minLength: { value: 6, message: "Mín. 6 chars" } })} />
               {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-400">Nombre completo</label>
-            <input
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="Juan Pérez"
-              {...register("name", { required: "Requerido" })}
-            />
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Nombre completo</label>
+            <input className={inputClass} placeholder="Juan Pérez"
+              {...register("name", { required: "Requerido" })} />
             {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-400">Nivel</label>
-              <select
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                {...register("level")}
-              >
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Nivel</label>
+              <select className={selectClass} {...register("level")}>
                 <option value={1}>Principiante</option>
                 <option value={2}>Intermedio</option>
                 <option value={3}>Avanzado</option>
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-400">Objetivo</label>
-              <select
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                {...register("goal")}
-              >
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Objetivo</label>
+              <select className={selectClass} {...register("goal")}>
                 <option value={1}>General</option>
                 <option value={2}>Fitness</option>
                 <option value={3}>Competición</option>
@@ -213,36 +212,22 @@ function CreateAthleteModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-400">Peso (kg, opcional)</label>
-            <input
-              type="number"
-              step="0.1"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="70"
-              {...register("weight")}
-            />
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Peso (kg, opcional)</label>
+            <input type="number" step="0.1" className={inputClass} placeholder="70" {...register("weight")} />
           </div>
 
           {serverError && (
-            <p className="rounded-lg bg-red-900/40 px-3 py-2 text-sm text-red-300">{serverError}</p>
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {serverError}
+            </div>
           )}
 
           <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || mutation.isPending}
-              className="flex-1 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
-            >
+            <PrimaryButton type="button" variant="ghost" onClick={onClose}>Cancelar</PrimaryButton>
+            <PrimaryButton type="submit" disabled={isSubmitting || mutation.isPending}>
               {mutation.isPending ? "Creando…" : "Crear atleta"}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -262,89 +247,81 @@ export default function AdminAthletesPage() {
   return (
     <div className="space-y-6">
       {showCreate && <CreateAthleteModal onClose={() => setShowCreate(false)} />}
+
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Atletas</h1>
-          <p className="mt-1 text-sm text-zinc-400">{athletes.length} registrados</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Coach</p>
+          <h1 className="text-display text-4xl text-zinc-50 mt-0.5">Atletas</h1>
+          <p className="text-xs text-zinc-500 mt-1">{athletes.length} registrados</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+          className="flex items-center gap-2 rounded-2xl border border-brand/40 bg-brand/10 px-4 py-2.5 text-sm font-semibold text-brand hover:bg-brand/20 shadow-glow-sm transition-all"
         >
-          + Agregar atleta
+          <UserPlus className="h-4 w-4" />
+          Agregar
         </button>
       </div>
 
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-pulse">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-20 rounded-2xl border border-zinc-800 bg-zinc-900 animate-pulse" />
+            <div key={i} className="h-20 rounded-3xl border border-surface-border bg-surface" />
           ))}
         </div>
       )}
 
       {!isLoading && athletes.length === 0 && (
-        <p className="text-sm text-zinc-500 py-8 text-center">No hay atletas registrados todavía.</p>
+        <div className="rounded-3xl border border-surface-border bg-surface p-10 text-center">
+          <p className="text-display text-2xl text-zinc-600">SIN ATLETAS</p>
+          <p className="text-sm text-zinc-500 mt-2">No hay atletas registrados todavía.</p>
+        </div>
       )}
 
       <div className="space-y-3">
         {athletes.map((athlete) => (
-          <div key={athlete.id} className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-            {/* Fila principal */}
+          <div key={athlete.id} className="rounded-3xl border border-surface-border bg-surface overflow-hidden">
             <button
               onClick={() => setExpanded(expanded === athlete.id ? null : athlete.id)}
-              className="w-full px-4 py-4 text-left hover:bg-zinc-800/40 transition-colors"
+              className="w-full px-4 py-4 text-left hover:bg-surface-raised transition-colors"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 shrink-0 rounded-full bg-orange-500/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-orange-400">
+                  <div className="h-9 w-9 shrink-0 rounded-full bg-brand/15 border border-brand/25 flex items-center justify-center">
+                    <span className="text-sm font-bold text-brand">
                       {athlete.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-zinc-100 truncate">{athlete.name}</p>
-                    <p className="text-xs text-zinc-500">{LEVEL_LABEL[athlete.level] ?? athlete.level}</p>
+                    <p className="font-bold text-zinc-100 truncate">{athlete.name}</p>
+                    <p className="text-[10px] text-zinc-500">{LEVEL_LABEL[athlete.level] ?? athlete.level}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0">
-                  {/* Factor actual */}
+                <div className="flex items-center gap-3 shrink-0">
                   {athlete.currentFactor != null && (
                     <div className="text-right">
-                      <p className="text-sm font-bold text-orange-400">
+                      <p className={cn("text-sm font-bold", athlete.currentFactor > 1 ? "text-brand" : "text-zinc-300")}>
                         {Math.round(athlete.currentFactor * 100)}%
                       </p>
-                      <p className="text-xs text-zinc-500">{factorLabel(athlete.currentFactor)}</p>
+                      <p className="text-[9px] text-zinc-600">{factorLabel(athlete.currentFactor)}</p>
                     </div>
                   )}
-
-                  {/* Último RPE */}
                   {athlete.lastRpe != null && (
-                    <div className="text-right">
-                      <p className={`text-sm font-bold ${rpeColor(athlete.lastRpe)}`}>
-                        RPE {athlete.lastRpe}
-                      </p>
-                      <p className="text-xs text-zinc-500">
-                        {athlete.lastWorkoutDate
-                          ? new Date(athlete.lastWorkoutDate + "T00:00:00").toLocaleDateString("es", {
-                              day: "numeric", month: "short",
-                            })
-                          : "—"}
-                      </p>
-                    </div>
+                    <Chip variant={athlete.lastRpe <= 6 ? "success" : athlete.lastRpe <= 8 ? "moderate" : "high"}>
+                      RPE {athlete.lastRpe}
+                    </Chip>
                   )}
-
-                  <span className="text-zinc-500 text-xs">
-                    {expanded === athlete.id ? "▲" : "▼"}
-                  </span>
+                  {expanded === athlete.id
+                    ? <ChevronUp className="h-4 w-4 text-zinc-500" />
+                    : <ChevronDown className="h-4 w-4 text-zinc-500" />
+                  }
                 </div>
               </div>
             </button>
 
-            {/* Historial expandible */}
             {expanded === athlete.id && (
-              <div className="border-t border-zinc-800 px-4 pb-4">
+              <div className="border-t border-surface-border px-4 pb-4">
                 <AthleteHistory athleteId={athlete.id} />
               </div>
             )}

@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { setHasProfile } from "@/lib/auth";
 import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
+import { PrimaryButton } from "@/components/ui/primary-button";
 import { useState } from "react";
+import { cn } from "@/lib/cn";
 
 const LEVELS = [
-  { value: 1, label: "Principiante" },
-  { value: 2, label: "Intermedio"   },
-  { value: 3, label: "Avanzado"     },
+  { value: 1, label: "Principiante", icon: "🌱" },
+  { value: 2, label: "Intermedio",   icon: "⚡" },
+  { value: 3, label: "Avanzado",     icon: "🔥" },
 ];
 
 const GOALS = [
@@ -30,19 +32,22 @@ const DURATIONS = [
 ];
 const EQUIPMENT = [
   { value: "barbell",    label: "Barra"        },
-  { value: "pullup_bar", label: "Barra de pull" },
+  { value: "pullup_bar", label: "Barra Pull"   },
   { value: "rings",      label: "Anillas"      },
   { value: "box",        label: "Cajón"        },
   { value: "kettlebell", label: "Kettlebell"   },
   { value: "rower",      label: "Remo"         },
 ];
 const WEAK_POINTS = [
-  { value: "gymnastics",    label: "Gimnasia"      },
-  { value: "weightlifting", label: "Halterofilia"  },
-  { value: "cardio",        label: "Cardio"        },
-  { value: "strength",      label: "Fuerza"        },
-  { value: "flexibility",   label: "Flexibilidad"  },
+  { value: "gymnastics",    label: "Gimnasia"     },
+  { value: "weightlifting", label: "Halterofilia" },
+  { value: "cardio",        label: "Cardio"       },
+  { value: "strength",      label: "Fuerza"       },
+  { value: "flexibility",   label: "Flexibilidad" },
 ];
+
+const inputClass = "w-full rounded-2xl border border-surface-border bg-surface px-4 py-3.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30";
+const labelClass = "text-xs font-semibold uppercase tracking-widest text-zinc-400";
 
 export default function SetupPage() {
   const router    = useRouter();
@@ -72,7 +77,6 @@ export default function SetupPage() {
       router.push("/workout");
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        // Ya tiene perfil — sincronizar cookie y continuar
         setHasProfile();
         router.push("/workout");
       } else if (err instanceof ApiError) {
@@ -84,132 +88,99 @@ export default function SetupPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-orange-500">CrossFitWOD</h1>
-          <p className="mt-1 text-sm text-zinc-400">Completá tu perfil de atleta</p>
+    <main className="relative min-h-screen px-6 py-12 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-brand-radial" />
+
+      <div className="mx-auto w-full max-w-sm space-y-8 animate-fade-up">
+        <div className="text-center space-y-1">
+          <h1 className="text-display text-5xl text-brand glow-text">Tu perfil</h1>
+          <p className="text-sm text-zinc-500">La IA usa esto para personalizar cada WOD</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
           {/* Nombre */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="name">
-              Nombre
-            </label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Tu nombre"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              {...register("name")}
-            />
-            {errors.name && (
-              <p className="text-xs text-red-400">{errors.name.message}</p>
-            )}
+          <div className="space-y-2">
+            <label className={labelClass} htmlFor="name">Nombre</label>
+            <input id="name" type="text" placeholder="Tu nombre" className={inputClass} {...register("name")} />
+            {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
           </div>
 
           {/* Nivel */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">
-              Nivel
-            </label>
+          <div className="space-y-2">
+            <label className={labelClass}>Nivel CrossFit</label>
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
-                <label
-                  key={l.value}
-                  className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-center has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10"
-                >
-                  <input
-                    type="radio"
-                    value={l.value}
-                    className="sr-only"
-                    {...register("level")}
-                  />
-                  <span className="text-xs font-medium text-zinc-300">{l.label}</span>
+                <label key={l.value} className="cursor-pointer">
+                  <input type="radio" value={l.value} className="sr-only" {...register("level")} />
+                  <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <span className="text-xl">{l.icon}</span>
+                    <span className="text-xs font-semibold text-zinc-300">{l.label}</span>
+                  </div>
                 </label>
               ))}
             </div>
-            {errors.level && (
-              <p className="text-xs text-red-400">{errors.level.message}</p>
-            )}
+            {errors.level && <p className="text-xs text-red-400">{errors.level.message}</p>}
           </div>
 
           {/* Objetivo */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Objetivo</label>
+          <div className="space-y-2">
+            <label className={labelClass}>Objetivo</label>
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
-                <label
-                  key={g.value}
-                  className="flex cursor-pointer flex-col gap-0.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10"
-                >
-                  <input
-                    type="radio"
-                    value={g.value}
-                    className="sr-only"
-                    {...register("goal")}
-                  />
-                  <span className="text-xs font-medium text-zinc-200">{g.label}</span>
-                  <span className="text-[11px] text-zinc-500">{g.desc}</span>
+                <label key={g.value} className="cursor-pointer">
+                  <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
+                  <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
+                    <span className="text-[11px] text-zinc-500">{g.desc}</span>
+                  </div>
                 </label>
               ))}
             </div>
-            {errors.goal && (
-              <p className="text-xs text-red-400">{errors.goal.message}</p>
-            )}
+            {errors.goal && <p className="text-xs text-red-400">{errors.goal.message}</p>}
           </div>
 
-          {/* Peso (opcional) */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="weight">
-              Peso corporal <span className="text-zinc-500">(kg, opcional)</span>
+          {/* Peso */}
+          <div className="space-y-2">
+            <label className={labelClass} htmlFor="weight">
+              Peso corporal <span className="normal-case font-normal text-zinc-600">(kg, opcional)</span>
             </label>
-            <input
-              id="weight"
-              type="number"
-              step="0.1"
-              min="1"
-              placeholder="75"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              {...register("weight")}
-            />
-            {errors.weight && (
-              <p className="text-xs text-red-400">{errors.weight.message}</p>
-            )}
+            <input id="weight" type="number" step="0.1" min="1" placeholder="75" className={inputClass} {...register("weight")} />
           </div>
 
-          {/* Días por semana */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Días de entrenamiento por semana</label>
+          {/* Días */}
+          <div className="space-y-2">
+            <label className={labelClass}>Días de entrenamiento / semana</label>
             <div className="flex gap-2">
               {DAYS.map((d) => (
-                <label key={d} className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
+                <label key={d} className="flex-1 cursor-pointer">
                   <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
-                  <span className="text-sm font-medium text-zinc-200">{d}</span>
+                  <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <span className="text-sm font-bold text-zinc-200">{d}</span>
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Duración de sesión */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">Duración de sesión</label>
+          {/* Duración */}
+          <div className="space-y-2">
+            <label className={labelClass}>Duración de sesión</label>
             <div className="grid grid-cols-4 gap-2">
               {DURATIONS.map((d) => (
-                <label key={d.value} className="flex cursor-pointer items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10">
+                <label key={d.value} className="cursor-pointer">
                   <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
-                  <span className="text-xs font-medium text-zinc-200">{d.label}</span>
+                  <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                    <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
           {/* Equipamiento */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">
-              Equipamiento disponible <span className="text-zinc-500">(opcional)</span>
-            </label>
+          <div className="space-y-2">
+            <label className={labelClass}>Equipamiento <span className="normal-case font-normal text-zinc-600">(opcional)</span></label>
             <Controller
               name="equipment"
               control={control}
@@ -223,7 +194,12 @@ export default function SetupPage() {
                   <div className="flex flex-wrap gap-2">
                     {EQUIPMENT.map((e) => (
                       <button key={e.value} type="button" onClick={() => toggle(e.value)}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${selected.includes(e.value) ? "border-orange-500 bg-orange-500/10 text-orange-300" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                          selected.includes(e.value)
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-surface-border text-zinc-500 hover:border-zinc-600"
+                        )}>
                         {e.label}
                       </button>
                     ))}
@@ -232,17 +208,15 @@ export default function SetupPage() {
               }}
             />
             {attempted && noEquipment && (
-              <p className="rounded-lg bg-amber-900/30 border border-amber-700/40 px-3 py-2 text-xs text-amber-300">
-                Sin equipamiento seleccionado tus WODs serán solo con peso corporal (burpees, flexiones, sentadillas).
+              <p className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400">
+                Sin equipamiento: WODs solo con peso corporal (burpees, flexiones, sentadillas).
               </p>
             )}
           </div>
 
           {/* Puntos débiles */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-zinc-300">
-              Puntos débiles <span className="text-zinc-500">(opcional)</span>
-            </label>
+          <div className="space-y-2">
+            <label className={labelClass}>Puntos débiles <span className="normal-case font-normal text-zinc-600">(opcional)</span></label>
             <Controller
               name="weakPoints"
               control={control}
@@ -256,7 +230,12 @@ export default function SetupPage() {
                   <div className="flex flex-wrap gap-2">
                     {WEAK_POINTS.map((w) => (
                       <button key={w.value} type="button" onClick={() => toggle(w.value)}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${selected.includes(w.value) ? "border-orange-500 bg-orange-500/10 text-orange-300" : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                          selected.includes(w.value)
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-surface-border text-zinc-500 hover:border-zinc-600"
+                        )}>
                         {w.label}
                       </button>
                     ))}
@@ -267,18 +246,14 @@ export default function SetupPage() {
           </div>
 
           {serverError && (
-            <p className="rounded-lg bg-red-900/40 px-3 py-2 text-sm text-red-300">
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {serverError}
-            </p>
+            </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? "Guardando…" : "Crear perfil"}
-          </button>
+          <PrimaryButton type="submit" disabled={isSubmitting} size="lg">
+            {isSubmitting ? "Guardando…" : "Comenzar a entrenar →"}
+          </PrimaryButton>
         </form>
       </div>
     </main>

@@ -1,9 +1,12 @@
 "use client";
 
 import { useHistory, type HistoryEntry } from "@/hooks/use-history";
-import { useRouter } from "next/navigation";
-import { removeToken } from "@/lib/auth";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { StatCard } from "@/components/ui/stat-card";
+import { Chip } from "@/components/ui/chip";
 import { useState, useEffect } from "react";
+import { TrendingUp, TrendingDown, Minus, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 const WOD_TYPE_LABEL: Record<string, string> = {
   ForTime: "For Time",
@@ -17,17 +20,17 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function rpeColor(rpe: number): string {
-  if (rpe <= 6)  return "text-emerald-400";
-  if (rpe <= 8)  return "text-orange-400";
-  return "text-red-400";
+function rpeChipVariant(rpe: number): "success" | "moderate" | "high" {
+  if (rpe <= 6) return "success";
+  if (rpe <= 8) return "moderate";
+  return "high";
 }
 
-function Trend({ prev, curr }: { prev: number | null; curr: number }) {
+function TrendIcon({ prev, curr }: { prev: number | null; curr: number }) {
   if (prev === null) return null;
-  if (curr > prev)  return <span className="text-xs font-medium text-emerald-400">↑ subió</span>;
-  if (curr < prev)  return <span className="text-xs font-medium text-sky-400">↓ bajó</span>;
-  return              <span className="text-xs font-medium text-zinc-500">→ igual</span>;
+  if (curr > prev)  return <TrendingUp  className="h-3.5 w-3.5 text-emerald-400" />;
+  if (curr < prev)  return <TrendingDown className="h-3.5 w-3.5 text-sky-400" />;
+  return              <Minus className="h-3.5 w-3.5 text-zinc-500" />;
 }
 
 function factorLabel(factor: number): string {
@@ -51,7 +54,6 @@ function ResultValue({ entry }: { entry: HistoryEntry }) {
 const PAGE_SIZE = 10;
 
 export default function HistoryPage() {
-  const router = useRouter();
   const [skip, setSkip]       = useState(0);
   const [all,  setAll]        = useState<HistoryEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -67,106 +69,97 @@ export default function HistoryPage() {
     if (page.length < PAGE_SIZE) setHasMore(false);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handleLogout() {
-    removeToken();
-    router.push("/login");
-  }
+  // Compute simple stats from loaded data
+  const totalWods   = all.length;
+  const avgRpe      = all.length > 0 ? Math.round(all.reduce((s, e) => s + e.rpe, 0) / all.length) : 0;
+  const bestFactor  = all.length > 0 ? Math.max(...all.map(e => e.scaledRepsFactor)) : 0;
 
   return (
-    <main className="min-h-screen px-4 py-10">
-      <div className="mx-auto max-w-lg space-y-6">
+    <main className="min-h-screen px-4 pt-6">
+      <div className="mx-auto max-w-md space-y-6">
 
-        <header className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-orange-500">CrossFitWOD</h1>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Salir
-          </button>
+        {/* Header */}
+        <header className="space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Tu progreso</p>
+          <h1 className="text-display text-4xl text-zinc-50">Historial</h1>
         </header>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-zinc-100">Tu historial</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">{all.length} WODs registrados</p>
+        {/* Stats row */}
+        {all.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            <StatCard label="WODs" value={totalWods} accent />
+            <StatCard label="RPE medio" value={avgRpe || "—"} sub="sobre 10" />
+            <StatCard label="Mejor vol." value={bestFactor > 0 ? `${Math.round(bestFactor * 100)}%` : "—"} />
           </div>
-          <button
-            onClick={() => router.push("/workout")}
-            className="text-sm text-orange-400 hover:underline"
-          >
-            ← Volver
-          </button>
-        </div>
+        )}
 
+        {/* Loading skeletons */}
         {isLoading && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-pulse">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-24 rounded-2xl border border-zinc-800 bg-zinc-900 animate-pulse" />
+              <div key={i} className="h-28 rounded-3xl border border-surface-border bg-surface" />
             ))}
           </div>
         )}
 
+        {/* Empty state */}
         {!isLoading && all.length === 0 && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center">
-            <p className="text-zinc-400">Todavía no registraste ningún resultado.</p>
-            <button
-              onClick={() => router.push("/workout")}
-              className="mt-3 text-sm text-orange-400 hover:underline"
-            >
-              Ver el WOD de hoy
-            </button>
+          <div className="rounded-3xl border border-surface-border bg-surface p-10 text-center space-y-3">
+            <p className="text-display text-2xl text-zinc-600">SIN WODS</p>
+            <p className="text-sm text-zinc-500">Todavía no registraste ningún resultado.</p>
           </div>
         )}
 
+        {/* List */}
         <div className="space-y-3">
           {all.map((entry, i) => {
             const prevFactor = all[i + 1]?.scaledRepsFactor ?? null;
             return (
               <div
                 key={i}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 space-y-3"
+                className="rounded-3xl border border-surface-border bg-surface p-4 space-y-4 animate-fade-up"
               >
-                {/* Header */}
+                {/* Header row */}
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-zinc-100">{entry.wodTitle}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-zinc-100 truncate">{entry.wodTitle}</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 capitalize">
                       {new Date(entry.date + "T00:00:00").toLocaleDateString("es", {
                         weekday: "long", day: "numeric", month: "long",
                       })}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-400">
-                    {WOD_TYPE_LABEL[entry.wodType] ?? entry.wodType}
-                  </span>
+                  <Chip variant="default">{WOD_TYPE_LABEL[entry.wodType] ?? entry.wodType}</Chip>
                 </div>
 
-                {/* Stats */}
+                {/* Stats grid */}
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-lg bg-zinc-800/60 px-3 py-2">
-                    <p className="text-xs text-zinc-500 mb-0.5">Resultado</p>
-                    <p className="text-sm font-medium text-zinc-200">
+                  <div className="rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5">
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600 mb-1">Resultado</p>
+                    <p className="text-sm font-bold text-zinc-200">
                       <ResultValue entry={entry} />
                     </p>
                   </div>
 
-                  <div className="rounded-lg bg-zinc-800/60 px-3 py-2">
-                    <p className="text-xs text-zinc-500 mb-0.5">RPE</p>
-                    <p className={`text-sm font-bold ${rpeColor(entry.rpe)}`}>
-                      {entry.rpe} / 10
-                    </p>
+                  <div className="rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5">
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600 mb-1">RPE</p>
+                    <Chip variant={rpeChipVariant(entry.rpe)} className="text-[10px] px-2 py-0.5">
+                      {entry.rpe}/10
+                    </Chip>
                   </div>
 
-                  <div className="rounded-lg bg-zinc-800/60 px-3 py-2">
-                    <p className="text-xs text-zinc-500 mb-0.5">Volumen</p>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-sm font-bold text-orange-400">
+                  <div className="rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5">
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600 mb-1">Volumen</p>
+                    <div className="flex items-center gap-1">
+                      <span className={cn(
+                        "text-sm font-bold",
+                        entry.scaledRepsFactor > 1 ? "text-brand" : "text-zinc-300"
+                      )}>
                         {Math.round(entry.scaledRepsFactor * 100)}%
-                      </p>
-                      <Trend prev={prevFactor} curr={entry.scaledRepsFactor} />
+                      </span>
+                      <TrendIcon prev={prevFactor} curr={entry.scaledRepsFactor} />
                     </div>
-                    <p className="text-xs text-zinc-600 mt-0.5">{factorLabel(entry.scaledRepsFactor)}</p>
+                    <p className="text-[9px] text-zinc-600 mt-0.5">{factorLabel(entry.scaledRepsFactor)}</p>
                   </div>
                 </div>
               </div>
@@ -175,13 +168,14 @@ export default function HistoryPage() {
         </div>
 
         {hasMore && all.length > 0 && (
-          <button
+          <PrimaryButton
+            variant="ghost"
             onClick={() => setSkip(s => s + PAGE_SIZE)}
             disabled={isFetching}
-            className="w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
           >
+            <ChevronDown className="mr-2 h-4 w-4" />
             {isFetching ? "Cargando…" : "Ver más"}
-          </button>
+          </PrimaryButton>
         )}
 
       </div>

@@ -4,11 +4,76 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
+    --background: #0a0a0a;
+    --foreground: #f4f4f5;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-zinc-950 text-zinc-100 antialiased;
+    background-color: #0a0a0a;
+    color: #f4f4f5;
+    @apply antialiased;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+
+  /* Range input — neon green track */
+  input[type="range"] {
+    @apply appearance-none w-full h-1.5 rounded-full cursor-pointer;
+    background: #262626;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    @apply appearance-none w-5 h-5 rounded-full cursor-pointer;
+    background: #c6ff3d;
+    box-shadow: 0 0 8px rgba(198, 255, 61, 0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    @apply w-5 h-5 rounded-full cursor-pointer border-0;
+    background: #c6ff3d;
+    box-shadow: 0 0 8px rgba(198, 255, 61, 0.5);
+  }
+
+  /* Checkbox — neon green */
+  input[type="checkbox"] {
+    accent-color: #c6ff3d;
+  }
+}
+
+@layer utilities {
+  .text-display {
+    font-family: var(--font-display), Impact, "Arial Narrow", sans-serif;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .glow {
+    box-shadow: 0 0 20px rgba(198, 255, 61, 0.35);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px rgba(198, 255, 61, 0.6);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-safe {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
 }
