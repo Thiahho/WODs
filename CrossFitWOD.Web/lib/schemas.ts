@@ -87,6 +87,8 @@ export const SetupProfileSchema = z.object({
   sessionDurationMinutes: z.coerce.number().int().default(45),
   equipment:             z.string().default(""),
   weakPoints:            z.string().default(""),
+  injuryHistory:         z.string().optional(),
+  commitmentLevel:       z.coerce.number().int().min(1).max(10).default(5),
 });
 
 // ── Inferred types ────────────────────────────────────────────────────────────

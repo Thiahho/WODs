@@ -120,16 +120,18 @@ public class AthletesController : ControllerBase
 
         var athlete = new Athlete
         {
-            UserId                = userId,
-            BoxId                 = user.BoxId,
-            Name                  = dto.Name,
-            Level                 = dto.Level,
-            Goal                  = dto.Goal,
-            Weight                = dto.Weight,
-            DaysPerWeek           = dto.DaysPerWeek,
+            UserId                 = userId,
+            BoxId                  = user.BoxId,
+            Name                   = dto.Name,
+            Level                  = dto.Level,
+            Goal                   = dto.Goal,
+            Weight                 = dto.Weight,
+            DaysPerWeek            = dto.DaysPerWeek,
             SessionDurationMinutes = dto.SessionDurationMinutes,
-            Equipment             = dto.Equipment,
-            WeakPoints            = dto.WeakPoints,
+            Equipment              = dto.Equipment,
+            WeakPoints             = dto.WeakPoints,
+            InjuryHistory          = dto.InjuryHistory,
+            CommitmentLevel        = dto.CommitmentLevel,
         };
         _db.Athletes.Add(athlete);
         await _db.SaveChangesAsync();
@@ -152,6 +154,8 @@ public class AthletesController : ControllerBase
         athlete.SessionDurationMinutes = dto.SessionDurationMinutes;
         athlete.Equipment              = dto.Equipment ?? string.Empty;
         athlete.WeakPoints             = dto.WeakPoints ?? string.Empty;
+        athlete.InjuryHistory          = dto.InjuryHistory;
+        athlete.CommitmentLevel        = dto.CommitmentLevel;
 
         await _db.SaveChangesAsync();
         return Ok(new { athlete.Id, athlete.Name, athlete.Level, athlete.Goal });
@@ -179,6 +183,8 @@ public class AthletesController : ControllerBase
         athlete.SessionDurationMinutes = dto.SessionDurationMinutes;
         athlete.Equipment              = dto.Equipment ?? string.Empty;
         athlete.WeakPoints             = dto.WeakPoints ?? string.Empty;
+        athlete.InjuryHistory          = dto.InjuryHistory;
+        athlete.CommitmentLevel        = dto.CommitmentLevel;
 
         await _db.SaveChangesAsync();
         return Ok(new { athlete.Id, athlete.Name, athlete.Level, athlete.Goal });

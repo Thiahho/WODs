@@ -10,5 +10,7 @@ public record CreateAthleteDto(
     int          DaysPerWeek            = 3,
     int          SessionDurationMinutes = 45,
     string       Equipment              = "",
-    string       WeakPoints             = ""
+    string       WeakPoints             = "",
+    string?      InjuryHistory          = null,
+    int          CommitmentLevel        = 5
 );

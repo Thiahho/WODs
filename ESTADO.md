@@ -1,6 +1,6 @@
 # CrossFitWOD — Estado del proyecto
 
-**Última actualización:** 2026-04-07 (rev 8)
+**Última actualización:** 2026-04-06 (rev 9)
 
 ---
 
@@ -426,12 +426,12 @@ Cookies: `wod_token` (JWT) + `wod_has_profile` (flag 1) + `wod_role` (`"admin"` 
 
 - [ ] No hay refresh tokens (access token dura 24h)
 - [ ] `Equipment` y `WeakPoints` almacenados como string CSV
-- [ ] `DaysPerWeek` no afecta al generador de IA (podría usarse para variar volumen semanal)
-- [ ] Sin paginación en historial ni lista de atletas
+- [x] ~~`DaysPerWeek` no afecta al generador de IA~~ — resuelto: `AiWodService` calcula sesiones completadas esta semana y las restantes; agrega bloque `## CONTEXTO SEMANAL` al prompt. System prompt actualizado para periodizar según posición en la semana
+- [x] ~~Sin paginación en historial ni lista de atletas~~ — historial atleta (`/history`) ya tenía "Ver más" (skip+10). Admin → historial expandible por atleta: ahora acumula páginas de 20 con "Ver más" usando `useEffect`
 - [ ] Sin tests automatizados
-- [ ] Páginas admin (`/admin/*`) scaffoldeadas pero pendientes de implementación completa
-- [ ] Página `/profile` scaffoldeada pero no implementada (faltan `InjuryHistory`, `CommitmentLevel` en el form de setup)
-- [x] ~~`AthleteStatusService` corre en `Task.Run` sin manejo de errores~~ — resuelto: `try/catch` con `ILogger.LogError` en `WorkoutResultService` y `AthleteDailyLogsController`
-- [x] ~~`AiWodService` no tiene retry ante fallos de OpenAI API~~ — resuelto: retry con backoff exponencial (1s, 2s, 4s), 3 intentos, loguea cada reintento
+- [x] ~~Páginas admin (`/admin/*`) scaffoldeadas pero pendientes~~ — ya estaban completamente implementadas
+- [x] ~~Página `/profile` falta `InjuryHistory` y `CommitmentLevel`~~ — resuelto: slider 1–10 de compromiso + textarea de lesiones. Backend: `CreateAthleteDto` + `UpdateMe`/`UpdateById`/`CreateMe` actualizados
+- [x] ~~`AthleteStatusService` corre en `Task.Run` sin manejo de errores~~ — resuelto: `try/catch` con `ILogger.LogError`
+- [x] ~~`AiWodService` no tiene retry ante fallos de OpenAI API~~ — resuelto: retry con backoff exponencial (1s, 2s, 4s)
 - [x] ~~El WOD generado siempre tiene `Type = WodType.Amrap`~~ — resuelto: `DetermineWodType()` parsea el metcon
-- [ ] Sin página de error 404 en el frontend
+- [x] ~~Sin página de error 404 en el frontend~~ — resuelto: `app/not-found.tsx`

@@ -66,8 +66,14 @@ public class AiWodService
             .Take(5)
             .ToListAsync();
 
+        // ── Contexto semanal ──────────────────────────────────────────────────
+        var weekStart = today.AddDays(-(int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1);
+        var sessionsThisWeek = await _db.AthleteWorkouts
+            .Where(aw => aw.AthleteId == athleteId && aw.WorkoutSession.Date >= weekStart && aw.WorkoutSession.Date <= today)
+            .CountAsync();
+
         // ── Llamar Claude API ─────────────────────────────────────────────────
-        var userMessage = BuildUserMessage(athlete, status, recentLogs, recentResults, today);
+        var userMessage = BuildUserMessage(athlete, status, recentLogs, recentResults, today, sessionsThisWeek);
         var rawResponse = await CallOpenAiWithRetryAsync(userMessage);
 
         // ── Parsear y guardar ─────────────────────────────────────────────────
@@ -99,7 +105,8 @@ public class AiWodService
         AthleteStatus? status,
         List<AthleteDailyLogs> logs,
         List<AthleteWorkout> results,
-        DateOnly today)
+        DateOnly today,
+        int sessionsThisWeek)
     {
         var sb = new StringBuilder();
 
@@ -153,6 +160,20 @@ public class AiWodService
                               (string.IsNullOrWhiteSpace(log.Notes)       ? "" : $", notas: {log.Notes}"));
             }
         }
+        sb.AppendLine();
+
+        // Contexto semanal
+        sb.AppendLine("## CONTEXTO SEMANAL");
+        var remainingThisWeek = Math.Max(0, athlete.DaysPerWeek - sessionsThisWeek);
+        sb.AppendLine($"- Sesiones planificadas por semana: {athlete.DaysPerWeek}");
+        sb.AppendLine($"- Sesiones completadas esta semana: {sessionsThisWeek}");
+        sb.AppendLine($"- Sesiones restantes esta semana: {remainingThisWeek}");
+        if (sessionsThisWeek == 0)
+            sb.AppendLine("- Es el primer entrenamiento de la semana — podés arrancar con más intensidad si el readiness lo permite.");
+        else if (remainingThisWeek == 0)
+            sb.AppendLine("- Es el último entrenamiento de la semana — considerá reducir la intensidad o enfocar en movilidad/técnica.");
+        else if (sessionsThisWeek >= athlete.DaysPerWeek - 1)
+            sb.AppendLine("- Queda solo una sesión más esta semana — planificá en función de la recuperación acumulada.");
         sb.AppendLine();
 
         // Resultados recientes
@@ -362,6 +383,7 @@ public class AiWodService
         - Integrá fuerza, halterofilia, gimnasia y resistencia según el objetivo.
         - Incluí siempre: warm-up, strength/skill, metcon, cooldown y opciones de escalado.
         - El WOD debe ser específico y detallado: reps exactas, tiempos, pesos recomendados.
+        - Usá el contexto semanal para periodizar: primer día de semana → mayor intensidad posible; último día → técnica o movilidad; días intermedios → varía entre fuerza y metcon.
         - Respondé SOLO con el JSON solicitado, sin ningún texto adicional.
         """;
 

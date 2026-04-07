@@ -52,6 +52,8 @@ interface AthleteProfile {
   sessionDurationMinutes: number;
   equipment:             string;
   weakPoints:            string;
+  injuryHistory:         string | null;
+  commitmentLevel:       number;
 }
 
 export default function ProfilePage() {
@@ -68,6 +70,7 @@ export default function ProfilePage() {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SetupProfileForm>({
     resolver:      zodResolver(SetupProfileSchema),
@@ -80,8 +83,12 @@ export default function ProfilePage() {
       sessionDurationMinutes: profile.sessionDurationMinutes,
       equipment:              profile.equipment ?? "",
       weakPoints:             profile.weakPoints ?? "",
+      injuryHistory:          profile.injuryHistory ?? "",
+      commitmentLevel:        profile.commitmentLevel ?? 5,
     } : undefined,
   });
+
+  const commitmentValue = watch("commitmentLevel") ?? 5;
 
   async function onSubmit(data: SetupProfileForm) {
     setServerError(null);
@@ -240,6 +247,43 @@ export default function ProfilePage() {
                 );
               }}
             />
+          </div>
+
+          {/* Commitment level slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <label className="font-medium text-zinc-300">
+                Nivel de compromiso
+              </label>
+              <span className="font-bold text-orange-400">{commitmentValue}/10</span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              step={1}
+              className="w-full accent-orange-500"
+              {...register("commitmentLevel", { valueAsNumber: true })}
+            />
+            <div className="flex justify-between text-xs text-zinc-500">
+              <span>Casual</span>
+              <span>Full commitment</span>
+            </div>
+            <p className="text-xs text-zinc-600">La IA usa esto para calibrar la intensidad y el volumen.</p>
+          </div>
+
+          {/* Historial de lesiones */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-300">
+              Historial de lesiones <span className="text-zinc-500">(opcional)</span>
+            </label>
+            <textarea
+              rows={3}
+              placeholder="ej: hombro derecho operado en 2022, rodilla izquierda con molestia al correr..."
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+              {...register("injuryHistory")}
+            />
+            <p className="text-xs text-zinc-600">La IA evita movimientos que puedan agravar lesiones activas.</p>
           </div>
 
           {saved && (

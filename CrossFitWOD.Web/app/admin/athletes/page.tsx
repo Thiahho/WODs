@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { HistoryEntry } from "@/hooks/use-history";
 
@@ -42,18 +42,33 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const HISTORY_PAGE = 20;
+
 function AthleteHistory({ athleteId }: { athleteId: number }) {
-  const { data: entries = [], isLoading } = useQuery<HistoryEntry[]>({
-    queryKey: ["athlete-history", athleteId],
-    queryFn:  () => api.get<HistoryEntry[]>(`/api/athletes/${athleteId}/history`),
+  const [skip,    setSkip]    = useState(0);
+  const [all,     setAll]     = useState<HistoryEntry[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+
+  const { data: page = [], isLoading, isFetching } = useQuery<HistoryEntry[]>({
+    queryKey: ["athlete-history", athleteId, skip],
+    queryFn:  () => api.get<HistoryEntry[]>(`/api/athletes/${athleteId}/history?skip=${skip}`),
   });
 
-  if (isLoading) return <div className="py-4 animate-pulse text-xs text-zinc-500">Cargando...</div>;
-  if (entries.length === 0) return <p className="py-3 text-xs text-zinc-500">Sin resultados registrados.</p>;
+  useEffect(() => {
+    if (page.length === 0) {
+      if (skip > 0) setHasMore(false);
+      return;
+    }
+    setAll(prev => skip === 0 ? page : [...prev, ...page]);
+    if (page.length < HISTORY_PAGE) setHasMore(false);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (isLoading && all.length === 0) return <div className="py-4 animate-pulse text-xs text-zinc-500">Cargando...</div>;
+  if (!isLoading && all.length === 0) return <p className="py-3 text-xs text-zinc-500">Sin resultados registrados.</p>;
 
   return (
     <div className="mt-3 space-y-2">
-      {entries.map((entry, i) => (
+      {all.map((entry, i) => (
         <div key={i} className="grid grid-cols-4 gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs">
           <div>
             <p className="text-zinc-500">Fecha</p>
@@ -84,6 +99,15 @@ function AthleteHistory({ athleteId }: { athleteId: number }) {
           </div>
         </div>
       ))}
+      {hasMore && (
+        <button
+          onClick={() => setSkip(s => s + HISTORY_PAGE)}
+          disabled={isFetching}
+          className="w-full rounded-lg border border-zinc-700 py-2 text-xs text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
+        >
+          {isFetching ? "Cargando…" : "Ver más"}
+        </button>
+      )}
     </div>
   );
 }
