@@ -12,8 +12,9 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "CrossFitWOD",
-  description: "Tu WOD del día, escalado para ti",
+  title: "Cross-Pro",
+  description: "Tu WOD del día, escalado para vos",
+  icons: { icon: "/logo.png" },
 };
 
 export default function RootLayout({
