@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, removeToken } from "./auth";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5290";
 
@@ -19,6 +19,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      removeToken();
+      window.location.replace("/login");
+      throw new ApiError(401, "Sesión expirada");
+    }
     const body = await res.json().catch(() => ({}));
     throw new ApiError(res.status, body?.error ?? res.statusText);
   }

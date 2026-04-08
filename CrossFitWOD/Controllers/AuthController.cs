@@ -60,6 +60,22 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPut("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userId = int.Parse(User.FindFirst("user_id")!.Value);
+        var user   = await _db.Users.FindAsync(userId);
+        if (user is null) return NotFound();
+
+        if (!BC.Verify(dto.CurrentPassword, user.PasswordHash))
+            return BadRequest(new { error = "Contraseña actual incorrecta" });
+
+        user.PasswordHash = BC.HashPassword(dto.NewPassword, workFactor: 12);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpPost("registro")]
     public async Task<IActionResult> Registro([FromBody] RegisterRequest request)
     {

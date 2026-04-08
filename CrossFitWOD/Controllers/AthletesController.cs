@@ -26,9 +26,24 @@ public class AthletesController : ControllerBase
         var user   = await _db.Users.FindAsync(userId)
             ?? throw new NotFoundException("Usuario no encontrado.");
 
-        var athletes = await _db.Athletes
-            .Where(a => a.BoxId == user.BoxId)
-            .Select(a => new AthleteListItemDto(
+        var raw = await _db.Athletes
+            .Where(a => a.BoxId == user.BoxId && a.User.Role == "athlete")
+            .Include(a => a.AthleteGroups)
+                .ThenInclude(ag => ag.Group)
+            .Include(a => a.AthleteWorkouts)
+                .ThenInclude(aw => aw.WorkoutSession)
+            .Include(a => a.AthleteWorkouts)
+                .ThenInclude(aw => aw.Result)
+            .ToListAsync();
+
+        var athletes = raw.Select(a =>
+        {
+            var lastResult = a.AthleteWorkouts
+                .Where(aw => aw.Result != null)
+                .OrderByDescending(aw => aw.WorkoutSession.Date)
+                .FirstOrDefault();
+
+            return new AthleteListItemDto(
                 a.Id,
                 a.Name,
                 a.Level.ToString(),
@@ -36,23 +51,15 @@ public class AthletesController : ControllerBase
                     .OrderByDescending(aw => aw.WorkoutSession.Date)
                     .Select(aw => (float?)aw.ScaledRepsFactor)
                     .FirstOrDefault(),
-                a.AthleteWorkouts
-                    .Where(aw => aw.Result != null)
-                    .OrderByDescending(aw => aw.WorkoutSession.Date)
-                    .Select(aw => aw.WorkoutSession.Date.ToString("yyyy-MM-dd"))
-                    .FirstOrDefault(),
-                a.AthleteWorkouts
-                    .Where(aw => aw.Result != null)
-                    .OrderByDescending(aw => aw.WorkoutSession.Date)
-                    .Select(aw => (int?)aw.Result!.Rpe)
-                    .FirstOrDefault(),
-                a.AthleteWorkouts
-                    .Where(aw => aw.Result != null)
-                    .OrderByDescending(aw => aw.WorkoutSession.Date)
-                    .Select(aw => (bool?)aw.Result!.Completed)
-                    .FirstOrDefault()
-            ))
-            .ToListAsync();
+                lastResult?.WorkoutSession.Date.ToString("yyyy-MM-dd"),
+                lastResult?.Result?.Rpe,
+                lastResult?.Result?.Completed,
+                a.AthleteGroups
+                    .Where(ag => ag.Group is not null)
+                    .Select(ag => new AthleteGroupInfoDto(ag.Group.Id, ag.Group.Name))
+                    .ToList()
+            );
+        }).ToList();
 
         return Ok(athletes);
     }

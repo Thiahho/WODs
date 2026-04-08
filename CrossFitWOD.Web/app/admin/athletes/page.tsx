@@ -18,6 +18,7 @@ interface AthleteListItem {
   lastWorkoutDate: string | null;
   lastRpe:         number | null;
   lastCompleted:   boolean | null;
+  groups:          { id: number; name: string }[];
 }
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -294,7 +295,12 @@ export default function AdminAthletesPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-zinc-100 truncate">{athlete.name}</p>
-                    <p className="text-[10px] text-zinc-500">{LEVEL_LABEL[athlete.level] ?? athlete.level}</p>
+                    <p className="text-[10px] text-zinc-500">
+                      {LEVEL_LABEL[athlete.level] ?? athlete.level}
+                      {athlete.groups?.length > 0 && (
+                        <span className="ml-1.5 text-zinc-600">· {athlete.groups.map(g => g.name).join(", ")}</span>
+                      )}
+                    </p>
                   </div>
                 </div>
 

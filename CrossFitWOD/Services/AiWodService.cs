@@ -199,21 +199,26 @@ public class AiWodService
         sb.AppendLine("Genera el WOD de hoy respetando ESTRICTAMENTE el equipamiento disponible.");
         sb.AppendLine("No incluyas ningún ejercicio que requiera equipo que el atleta NO tiene.");
         sb.AppendLine("Adapta la intensidad según el readiness y los logs recientes.");
-        sb.AppendLine("Devuelve SOLO el siguiente JSON (sin markdown, sin texto extra):");
+        sb.AppendLine("Devuelve SOLO el siguiente JSON (sin markdown, sin texto extra).");
+        sb.AppendLine("IMPORTANTE — Formato de los campos de texto:");
+        sb.AppendLine("- Usá listas con guiones (- item) para ejercicios, opciones y pasos.");
+        sb.AppendLine("- Usá subtítulos cortos terminados en ':' para separar bloques (ej: 'Movilidad:', 'Activación:').");
+        sb.AppendLine("- Nunca escribas párrafos largos. Cada dato va en su propia línea.");
+        sb.AppendLine("- Sé conciso: datos clave solamente.");
         sb.AppendLine("""
 {
-  "title": "string",
+  "title": "string corto",
   "intensity": "low|moderate|high|deload",
-  "focus": "string (fuerza, resistencia, gymnasia, etc.)",
+  "focus": "string (fuerza, resistencia, gimnasia, etc.)",
   "duration_minutes": number,
-  "warm_up": "string con el warm-up completo",
-  "strength_skill": "string con la parte de fuerza o skill",
-  "metcon": "string con el WOD principal (AMRAP/EMOM/For Time con reps, tiempo y ejercicios)",
-  "scaling": "string con opciones RX / RX+ / escalado",
-  "cool_down": "string con el cooldown y movilidad",
-  "coach_notes": "string con análisis, progreso detectado y tips del coach",
-  "alert": "string o null — alerta de fatiga/riesgo/estancamiento si corresponde",
-  "nutrition_tip": "string o null — recomendación nutricional del día"
+  "warm_up": "lista de ejercicios con reps/tiempo, una línea por ejercicio",
+  "strength_skill": "nombre del movimiento + series x reps + peso recomendado, en lista",
+  "metcon": "tipo (AMRAP/EMOM/For Time) + tiempo + lista de movimientos con reps exactas",
+  "scaling": "Escalado:\n- [versión más fácil]\nRX:\n- [versión estándar]\nRX+:\n- [versión avanzada]",
+  "cool_down": "lista de estiramientos/movilidad con duración",
+  "coach_notes": "2-3 puntos clave: análisis y tips. Sin párrafos.",
+  "alert": "string corto o null",
+  "nutrition_tip": "1 línea concreta o null"
 }
 """);
 
@@ -369,22 +374,23 @@ public class AiWodService
 
     // ── System prompt ─────────────────────────────────────────────────────────
     private const string SystemPrompt = """
-        Sos un entrenador de CrossFit de alto rendimiento, científico del deporte y coach de atletas competitivos.
-        Tu función es generar WODs completamente personalizados basados en los datos reales del atleta.
+        Sos un entrenador de CrossFit de alto rendimiento. Generás WODs personalizados basados en los datos del atleta.
 
-        IDIOMA: Respondé SIEMPRE en español rioplatense (argentino). Usá "vos", "hacé", "empezá", etc.
-        Nunca uses "tú", "haz", "empieza" ni otras formas del español neutro o peninsular.
+        IDIOMA: Español rioplatense. Usá "vos", "hacé", "empezá". Nunca "tú", "haz", "empieza".
 
-        PRINCIPIOS FUNDAMENTALES:
-        - NUNCA uses equipamiento que el atleta no tiene disponible.
-        - Ajustá la intensidad según el readiness, fatiga y logs diarios.
-        - Aplicá periodización real: si hay fatiga alta o ratio > 1.3 → deload.
-        - Si hay lesiones → evitá ejercicios que afecten esa zona.
-        - Integrá fuerza, halterofilia, gimnasia y resistencia según el objetivo.
-        - Incluí siempre: warm-up, strength/skill, metcon, cooldown y opciones de escalado.
-        - El WOD debe ser específico y detallado: reps exactas, tiempos, pesos recomendados.
-        - Usá el contexto semanal para periodizar: primer día de semana → mayor intensidad posible; último día → técnica o movilidad; días intermedios → varía entre fuerza y metcon.
-        - Respondé SOLO con el JSON solicitado, sin ningún texto adicional.
+        FORMATO DE RESPUESTA — MUY IMPORTANTE:
+        - Respondé SOLO con el JSON solicitado, sin texto extra ni markdown.
+        - Los valores de texto deben ser CONCISOS: listas con guiones, datos clave, sin párrafos.
+        - Cada ejercicio en su propia línea. Cada opción de escalado en su propia línea.
+        - Máximo 2-3 líneas para coach_notes y nutrition_tip.
+
+        PRINCIPIOS:
+        - Nunca uses equipo que el atleta no tiene.
+        - Ajustá intensidad según readiness y logs.
+        - Fatiga alta o ratio > 1.3 → deload.
+        - Lesiones → evitá esa zona.
+        - Reps exactas, tiempos, pesos recomendados.
+        - Periodizá según semana: primer día → más intensidad; último → técnica/movilidad.
         """;
 
     private static WodType DetermineWodType(string? metcon)

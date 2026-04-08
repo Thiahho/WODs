@@ -91,6 +91,17 @@ export const SetupProfileSchema = z.object({
   commitmentLevel:       z.coerce.number().int().min(1).max(10).default(5),
 });
 
+export const ChangePasswordSchema = z.object({
+  currentPassword:    z.string().min(1, "Requerido"),
+  newPassword:        z.string().min(6, "Mínimo 6 caracteres"),
+  confirmNewPassword: z.string(),
+}).refine((d) => d.newPassword === d.confirmNewPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmNewPassword"],
+});
+
+export type ChangePasswordForm = z.infer<typeof ChangePasswordSchema>;
+
 // ── Inferred types ────────────────────────────────────────────────────────────
 
 export type TodayWorkout       = z.infer<typeof TodayWorkoutSchema>;

@@ -7,7 +7,8 @@ export function middleware(request: NextRequest) {
   const hasProfile = request.cookies.get("wod_has_profile")?.value;
   const role       = request.cookies.get("wod_role")?.value;
 
-  const publicPaths = ["/login", "/register"];
+  const publicPaths  = ["/login", "/register"];
+  if (pathname === "/logout") return NextResponse.next();
   const isAdmin     = role === "admin";
 
   // Sin token → solo rutas públicas

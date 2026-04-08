@@ -9,10 +9,16 @@ import { DailyLogForm } from "@/components/daily-log-form";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ApiError, api } from "@/lib/api";
 import { TodayWorkoutSchema } from "@/lib/schemas";
-import { Zap, BrainCircuit } from "lucide-react";
+import { Zap, BrainCircuit, UserCircle } from "lucide-react";
+import Link from "next/link";
+import { getRole, getMode } from "@/lib/auth";
 
 export default function WorkoutPage() {
   const router  = useRouter();
+
+  useEffect(() => {
+    if (getRole() === "admin" && getMode() !== "athlete") router.replace("/admin");
+  }, []);
   const { data, isLoading: wodLoading, error: wodError, fetchToday, generate } = useAiWod();
   const { submitted, isLoading: logLoading, error: logError, submit, checkToday, setSubmitted } = useDailyLog();
 
@@ -46,7 +52,8 @@ export default function WorkoutPage() {
     }
   }, [data]);
 
-  const isAuthError  = wodError instanceof ApiError && wodError.status === 401;
+  const isAuthError    = wodError instanceof ApiError && wodError.status === 401;
+  const isNoProfile    = wodError instanceof ApiError && wodError.status === 404;
   const isLoading    = wodLoading || logLoading || hasLog === null;
   const showLog      = hasLog === false && !submitted && !data;
   const showGenerate = (submitted || hasLog === true) && !data;
@@ -78,6 +85,18 @@ export default function WorkoutPage() {
             <div className="h-36 rounded-3xl border border-surface-border bg-surface" />
             <div className="h-24 rounded-3xl border border-surface-border bg-surface" />
             <div className="h-24 rounded-3xl border border-surface-border bg-surface" />
+          </div>
+        )}
+
+        {/* Sin perfil de atleta */}
+        {isNoProfile && (
+          <div className="rounded-3xl border border-brand/20 bg-brand/5 p-6 text-center space-y-3 animate-fade-up">
+            <UserCircle className="mx-auto h-10 w-10 text-brand/60" />
+            <p className="text-sm font-semibold text-zinc-200">Necesitás un perfil de atleta</p>
+            <p className="text-xs text-zinc-500">Configurá tu perfil para que la IA pueda generar WODs personalizados.</p>
+            <Link href="/profile">
+              <PrimaryButton variant="outline" size="sm">Crear perfil</PrimaryButton>
+            </Link>
           </div>
         )}
 

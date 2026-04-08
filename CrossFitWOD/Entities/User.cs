@@ -13,7 +13,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     
     [Column("createdat")]
-    public DateTime CreatedAt { get; set; } = DateTime.Today;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [Column("role")]
     public string Role         { get; set; } = "athlete";
     [Column("boxid")]

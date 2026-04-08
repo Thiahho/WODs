@@ -47,6 +47,9 @@ const config: Config = {
         "fade-up":    "fade-up 0.4s ease-out both",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
+      transitionProperty: {
+        "grid": "grid-template-rows",
+      },
     },
   },
   plugins: [],

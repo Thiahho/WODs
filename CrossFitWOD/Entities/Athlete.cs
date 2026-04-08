@@ -47,7 +47,8 @@ public class Athlete
     public int  BoxId { get; set; }
     public Box  Box   { get; set; } = null!;
 
-    public ICollection<AthleteDailyLogs> DailyLogs   { get; set; } = [];
-    public ICollection<AthleteStates>    PhysicalLogs { get; set; } = [];
-    public ICollection<AthleteStatus>    Statuses     { get; set; } = [];
+    public ICollection<AthleteGroup>      AthleteGroups { get; set; } = [];
+    public ICollection<AthleteDailyLogs> DailyLogs     { get; set; } = [];
+    public ICollection<AthleteStates>    PhysicalLogs  { get; set; } = [];
+    public ICollection<AthleteStatus>    Statuses      { get; set; } = [];
 }

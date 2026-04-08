@@ -3,8 +3,9 @@ import Cookies from "js-cookie";
 const TOKEN_KEY   = "wod_token";
 const PROFILE_KEY = "wod_has_profile";
 const ROLE_KEY    = "wod_role";
+const MODE_KEY    = "wod_mode";
 
-const COOKIE_OPTS = { expires: 1, sameSite: "strict" } as const;
+const COOKIE_OPTS = { sameSite: "strict" } as const;
 
 export function getToken(): string | undefined {
   return Cookies.get(TOKEN_KEY);
@@ -18,6 +19,15 @@ export function removeToken(): void {
   Cookies.remove(TOKEN_KEY);
   Cookies.remove(PROFILE_KEY);
   Cookies.remove(ROLE_KEY);
+  Cookies.remove(MODE_KEY);
+}
+
+export function setMode(mode: "coach" | "athlete"): void {
+  Cookies.set(MODE_KEY, mode, COOKIE_OPTS);
+}
+
+export function getMode(): string | undefined {
+  return Cookies.get(MODE_KEY);
 }
 
 export function setHasProfile(): void {

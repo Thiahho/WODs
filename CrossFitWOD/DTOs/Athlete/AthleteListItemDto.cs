@@ -1,5 +1,7 @@
 namespace CrossFitWOD.DTOs.Athlete;
 
+public record AthleteGroupInfoDto(int Id, string Name);
+
 public record AthleteListItemDto(
     int     Id,
     string  Name,
@@ -7,5 +9,6 @@ public record AthleteListItemDto(
     float?  CurrentFactor,
     string? LastWorkoutDate,
     int?    LastRpe,
-    bool?   LastCompleted
+    bool?   LastCompleted,
+    List<AthleteGroupInfoDto> Groups
 );

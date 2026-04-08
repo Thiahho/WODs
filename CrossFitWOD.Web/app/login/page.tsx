@@ -55,8 +55,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         {/* Logo */}
         <div className="text-center space-y-1">
-          <h1 className="text-display text-6xl text-brand glow-text">CrossFit</h1>
-          <h2 className="text-display text-4xl text-zinc-100">WOD</h2>
+          <h1 className="text-display text-5xl text-brand glow-text">CrossFit</h1>
+          <h2 className="text-display text-3xl text-zinc-100">WOD</h2>
           <p className="text-sm text-zinc-500 mt-2">Tu WOD del día, escalado para vos</p>
         </div>
 
@@ -68,6 +68,7 @@ export default function LoginPage() {
             <input
               id="username"
               type="text"
+              autoComplete="username"
               className="w-full rounded-2xl border border-surface-border bg-surface px-4 py-3.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30"
               placeholder="tu_usuario"
               {...register("username")}
@@ -84,6 +85,7 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               className="w-full rounded-2xl border border-surface-border bg-surface px-4 py-3.5 text-sm text-zinc-100 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30"
               {...register("password")}
             />

@@ -112,8 +112,8 @@ export default function SetupPage() {
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
                 <label key={l.value} className="cursor-pointer">
-                  <input type="radio" value={l.value} className="sr-only" {...register("level")} />
                   <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <input type="radio" value={l.value} className="sr-only" {...register("level")} />
                     <span className="text-xl">{l.icon}</span>
                     <span className="text-xs font-semibold text-zinc-300">{l.label}</span>
                   </div>
@@ -129,8 +129,8 @@ export default function SetupPage() {
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
                 <label key={g.value} className="cursor-pointer">
-                  <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
                   <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
                     <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
                     <span className="text-[11px] text-zinc-500">{g.desc}</span>
                   </div>
@@ -154,8 +154,8 @@ export default function SetupPage() {
             <div className="flex gap-2">
               {DAYS.map((d) => (
                 <label key={d} className="flex-1 cursor-pointer">
-                  <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
                   <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                    <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
                     <span className="text-sm font-bold text-zinc-200">{d}</span>
                   </div>
                 </label>
@@ -169,8 +169,8 @@ export default function SetupPage() {
             <div className="grid grid-cols-4 gap-2">
               {DURATIONS.map((d) => (
                 <label key={d.value} className="cursor-pointer">
-                  <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
                   <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                    <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
                     <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
                   </div>
                 </label>

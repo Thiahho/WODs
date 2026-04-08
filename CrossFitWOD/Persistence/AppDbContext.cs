@@ -19,6 +19,8 @@ public class AppDbContext : DbContext
     public DbSet<AthleteDailyLogs> AthleteDailyLogs => Set<AthleteDailyLogs>();
     public DbSet<AthleteStates>    AthleteStates    => Set<AthleteStates>();
     public DbSet<AthleteStatus>    AthleteStatuses  => Set<AthleteStatus>();
+    public DbSet<Group>            Groups           => Set<Group>();
+    public DbSet<AthleteGroup>     AthleteGroups    => Set<AthleteGroup>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -103,5 +105,26 @@ public class AppDbContext : DbContext
             .HasOne(s => s.Athlete)
             .WithMany(a => a.Statuses)
             .HasForeignKey(s => s.AthleteId);
+
+        // ── Groups ───────────────────────────────────────────────────────
+        b.Entity<Group>()
+            .HasOne(g => g.Box)
+            .WithMany()
+            .HasForeignKey(g => g.BoxId);
+
+        b.Entity<AthleteGroup>()
+            .HasKey(ag => new { ag.GroupId, ag.AthleteId });
+
+        b.Entity<AthleteGroup>()
+            .HasOne(ag => ag.Group)
+            .WithMany(g => g.AthleteGroups)
+            .HasForeignKey(ag => ag.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        b.Entity<AthleteGroup>()
+            .HasOne(ag => ag.Athlete)
+            .WithMany(a => a.AthleteGroups)
+            .HasForeignKey(ag => ag.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

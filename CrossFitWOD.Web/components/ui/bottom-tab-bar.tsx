@@ -6,7 +6,7 @@ import { Home, ClipboardList, Zap, User, Dumbbell, Calendar, Users } from "lucid
 import { cn } from "@/lib/cn";
 
 const ATHLETE_TABS = [
-  { href: "/workout",  label: "Inicio",    Icon: Home         },
+  // { href: "/workout",  label: "Inicio",    Icon: Home         },
   { href: "/history",  label: "Historial", Icon: ClipboardList },
   { href: "/workout",  label: "WOD",       Icon: Zap, central: true },
   { href: "/profile",  label: "Perfil",    Icon: User         },
@@ -17,6 +17,7 @@ const ADMIN_TABS = [
   { href: "/admin/session",   label: "Hoy",      Icon: Calendar },
   { href: "/admin/wods",      label: "WODs",     Icon: Dumbbell, central: true },
   { href: "/admin/athletes",  label: "Atletas",  Icon: Users    },
+  { href: "/profile",         label: "Perfil",   Icon: User     },
 ];
 
 interface Props {
