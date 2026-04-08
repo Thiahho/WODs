@@ -109,9 +109,10 @@ builder.Services.AddCors(opt => opt.AddPolicy("dev", p =>
 // ─────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Auto-aplica migraciones pendientes al arrancar (seguro: idempotente)
-using (var scope = app.Services.CreateScope())
+// Auto-aplica migraciones pendientes al arrancar (solo en producción; ignorar errores en dev)
+if (app.Environment.IsProduction())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }

@@ -1,6 +1,7 @@
 namespace CrossFitWOD.DTOs.AthleteWod;
 
 public record HistoryEntryDto(
+    int    WodId,
     string Date,
     string WodTitle,
     string WodType,

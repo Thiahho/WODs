@@ -33,6 +33,15 @@ public class WodDto
     public string? Description     { get; set; }
     public string  Type            { get; set; } = string.Empty;
     public int     DurationMinutes { get; set; }
+    public string? Intensity       { get; set; }
+    public string? Focus           { get; set; }
+    public bool    IsAiGenerated   { get; set; }
+    public string? WarmUp          { get; set; }
+    public string? StrengthSkill   { get; set; }
+    public string? Metcon          { get; set; }
+    public string? Scaling         { get; set; }
+    public string? CoolDown        { get; set; }
+    public string? CoachNotes      { get; set; }
     public List<WodExerciseDto> Exercises { get; set; } = [];
 }
 

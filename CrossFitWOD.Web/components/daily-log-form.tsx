@@ -53,7 +53,7 @@ const inputClass = "w-full rounded-2xl border border-surface-border bg-surface-r
 export function DailyLogForm({ onSubmit, isLoading, error }: Props) {
   const [energy,  setEnergy]  = useState(7);
   const [fatigue, setFatigue] = useState(3);
-  const [sleep,   setSleep]   = useState<string>("");
+  const [sleep,   setSleep]   = useState("");
   const [pain,    setPain]    = useState("");
   const [mental,  setMental]  = useState("");
   const [notes,   setNotes]   = useState("");

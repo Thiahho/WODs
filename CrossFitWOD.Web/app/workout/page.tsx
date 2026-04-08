@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAiWod } from "@/hooks/use-ai-wod";
 import { useDailyLog } from "@/hooks/use-daily-log";
-import { AiWodCard } from "@/components/ai-wod-card";
+import { WodDetailCard } from "@/components/wod-detail-card";
 import { DailyLogForm } from "@/components/daily-log-form";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ApiError, api } from "@/lib/api";
-import { TodayWorkoutSchema } from "@/lib/schemas";
+import { TodayWorkoutSchema, type TodayWorkout } from "@/lib/schemas";
 import { Zap, BrainCircuit, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { getRole, getMode } from "@/lib/auth";
@@ -22,16 +22,15 @@ export default function WorkoutPage() {
   const { data, isLoading: wodLoading, error: wodError, fetchToday, generate } = useAiWod();
   const { submitted, isLoading: logLoading, error: logError, submit, checkToday, setSubmitted } = useDailyLog();
 
-  const [hasLog,           setHasLog]           = useState<boolean | null>(null);
-  const [athleteWorkoutId, setAthleteWorkoutId] = useState<number | null>(null);
+  const [hasLog, setHasLog]   = useState<boolean | null>(null);
+  const [workout, setWorkout] = useState<TodayWorkout | null>(null);
 
   async function loadAthleteWorkout() {
     try {
       const raw = await api.get<unknown>("/api/athlete-workouts/today/me");
-      const aw  = TodayWorkoutSchema.parse(raw);
-      setAthleteWorkoutId(aw.id);
+      setWorkout(TodayWorkoutSchema.parse(raw));
     } catch {
-      // Sin sesión aún — se intentará después de generar
+      // Sin sesión aún — se cargará después de generar
     }
   }
 
@@ -46,17 +45,18 @@ export default function WorkoutPage() {
     init();
   }, []);
 
+  // Tras generar el WOD con IA, cargar el AthleteWorkout completo para mostrarlo
   useEffect(() => {
-    if (data && !athleteWorkoutId) {
+    if (data && !workout) {
       loadAthleteWorkout();
     }
   }, [data]);
 
-  const isAuthError    = wodError instanceof ApiError && wodError.status === 401;
-  const isNoProfile    = wodError instanceof ApiError && wodError.status === 404;
-  const isLoading    = wodLoading || logLoading || hasLog === null;
-  const showLog      = hasLog === false && !submitted && !data;
-  const showGenerate = (submitted || hasLog === true) && !data;
+  const isAuthError  = wodError instanceof ApiError && wodError.status === 401;
+  const isNoProfile  = wodError instanceof ApiError && wodError.status === 404;
+  const isLoading    = wodLoading || logLoading || hasLog === null || (!!data && !workout);
+  const showLog      = !workout && hasLog === false && !submitted && !data;
+  const showGenerate = !workout && (submitted || hasLog === true) && !data;
 
   const today = new Date().toLocaleDateString("es", {
     weekday: "long", day: "numeric", month: "long",
@@ -143,11 +143,12 @@ export default function WorkoutPage() {
         )}
 
         {/* Step 3: WOD display */}
-        {!isLoading && data && (
+        {!isLoading && workout && (
           <div className="animate-fade-up">
-            <AiWodCard
-              wod={data}
-              athleteWorkoutId={athleteWorkoutId ?? undefined}
+            <WodDetailCard
+              workout={workout}
+              alert={data?.alert}
+              nutritionTip={data?.nutritionTip}
             />
           </div>
         )}

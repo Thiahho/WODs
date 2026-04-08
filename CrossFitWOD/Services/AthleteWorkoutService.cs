@@ -90,6 +90,15 @@ public class AthleteWorkoutService
                     Description     = wod.Description,
                     Type            = wod.Type.ToString(),
                     DurationMinutes = wod.DurationMinutes,
+                    Intensity       = wod.Intensity,
+                    Focus           = wod.Focus,
+                    IsAiGenerated   = wod.IsAiGenerated,
+                    WarmUp          = wod.WarmUp,
+                    StrengthSkill   = wod.StrengthSkill,
+                    Metcon          = wod.Metcon,
+                    Scaling         = wod.Scaling,
+                    CoolDown        = wod.CoolDown,
+                    CoachNotes      = wod.CoachNotes,
                     Exercises       = wod.Exercises
                         .OrderBy(e => e.Order)
                         .Select(e => new WodExerciseDto

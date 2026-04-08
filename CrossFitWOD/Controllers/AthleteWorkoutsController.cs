@@ -51,6 +51,7 @@ public class AthleteWorkoutsController : ControllerBase
             .Skip(skip)
             .Take(pageSize)
             .Select(aw => new HistoryEntryDto(
+                aw.WorkoutSession.Wod.Id,
                 aw.WorkoutSession.Date.ToString("yyyy-MM-dd"),
                 aw.WorkoutSession.Wod.Title,
                 aw.WorkoutSession.Wod.Type.ToString(),

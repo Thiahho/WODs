@@ -5,8 +5,9 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { StatCard } from "@/components/ui/stat-card";
 import { Chip } from "@/components/ui/chip";
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Minus, ChevronDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
+import Link from "next/link";
 
 const WOD_TYPE_LABEL: Record<string, string> = {
   ForTime: "For Time",
@@ -114,10 +115,12 @@ export default function HistoryPage() {
         <div className="space-y-3">
           {all.map((entry, i) => {
             const prevFactor = all[i + 1]?.scaledRepsFactor ?? null;
+            const detailHref = `/wod/${entry.wodId}?factor=${entry.scaledRepsFactor}&date=${entry.date}`;
             return (
-              <div
+              <Link
                 key={i}
-                className="rounded-3xl border border-surface-border bg-surface p-4 space-y-4 animate-fade-up"
+                href={detailHref}
+                className="block rounded-3xl border border-surface-border bg-surface p-4 space-y-4 animate-fade-up transition-colors hover:border-zinc-600 active:bg-surface-raised"
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-3">
@@ -129,7 +132,10 @@ export default function HistoryPage() {
                       })}
                     </p>
                   </div>
-                  <Chip variant="default">{WOD_TYPE_LABEL[entry.wodType] ?? entry.wodType}</Chip>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Chip variant="default">{WOD_TYPE_LABEL[entry.wodType] ?? entry.wodType}</Chip>
+                    <ChevronRight className="h-4 w-4 text-zinc-600" />
+                  </div>
                 </div>
 
                 {/* Stats grid */}
@@ -162,7 +168,7 @@ export default function HistoryPage() {
                     <p className="text-[9px] text-zinc-600 mt-0.5">{factorLabel(entry.scaledRepsFactor)}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

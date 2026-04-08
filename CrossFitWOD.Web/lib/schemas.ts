@@ -35,9 +35,18 @@ export const WodExerciseSchema = z.object({
 export const WodSchema = z.object({
   id:              z.number().int(),
   title:           z.string(),
-  description:     z.string().optional(),
+  description:     z.string().nullable().optional(),
   type:            z.string(),
   durationMinutes: z.number(),
+  intensity:       z.string().nullable().optional(),
+  focus:           z.string().nullable().optional(),
+  isAiGenerated:   z.boolean().default(false),
+  warmUp:          z.string().nullable().optional(),
+  strengthSkill:   z.string().nullable().optional(),
+  metcon:          z.string().nullable().optional(),
+  scaling:         z.string().nullable().optional(),
+  coolDown:        z.string().nullable().optional(),
+  coachNotes:      z.string().nullable().optional(),
   exercises:       z.array(WodExerciseSchema),
 });
 
@@ -51,6 +60,13 @@ export const TodayWorkoutSchema = z.object({
     date: z.string(),
     wod:  WodSchema,
   }),
+  result: z.object({
+    completed:     z.boolean(),
+    timeSeconds:   z.number().nullable().optional(),
+    rounds:        z.number().nullable().optional(),
+    rpe:           z.number(),
+    factorMessage: z.string(),
+  }).nullable().optional(),
 });
 
 // ── Form schemas ──────────────────────────────────────────────────────────────
@@ -101,6 +117,36 @@ export const ChangePasswordSchema = z.object({
 });
 
 export type ChangePasswordForm = z.infer<typeof ChangePasswordSchema>;
+
+// ── WOD Detail (GET /api/wod/:id) ─────────────────────────────────────────────
+
+export const WodDetailExerciseSchema = z.object({
+  id:    z.number().optional(),
+  name:  z.string(),
+  reps:  z.number(),
+  order: z.number(),
+});
+
+export const WodDetailSchema = z.object({
+  wodId:           z.number(),
+  sessionId:       z.number().nullable().optional(),
+  title:           z.string(),
+  description:     z.string().nullable().optional(),
+  type:            z.string(),
+  intensity:       z.string().nullable().optional(),
+  focus:           z.string().nullable().optional(),
+  durationMinutes: z.number(),
+  isAiGenerated:   z.boolean(),
+  warmUp:          z.string().nullable().optional(),
+  strengthSkill:   z.string().nullable().optional(),
+  metcon:          z.string().nullable().optional(),
+  scaling:         z.string().nullable().optional(),
+  coolDown:        z.string().nullable().optional(),
+  coachNotes:      z.string().nullable().optional(),
+  exercises:       z.array(WodDetailExerciseSchema),
+});
+
+export type WodDetail = z.infer<typeof WodDetailSchema>;
 
 // ── Inferred types ────────────────────────────────────────────────────────────
 

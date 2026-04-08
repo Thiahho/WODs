@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 export interface HistoryEntry {
+  wodId:            number;
   date:             string;
   wodTitle:         string;
   wodType:          string;
