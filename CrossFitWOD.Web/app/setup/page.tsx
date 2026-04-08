@@ -140,6 +140,14 @@ export default function SetupPage() {
             {errors.goal && <p className="text-xs text-red-400">{errors.goal.message}</p>}
           </div>
 
+          {/* Edad */}
+          <div className="space-y-2">
+            <label className={labelClass} htmlFor="edad">
+              Edad <span className="normal-case font-normal text-zinc-600">*</span>
+            </label>
+            <input id="edad" type="number" step="1" min="1" className={inputClass} {...register("edad")} />
+          </div>
+          
           {/* Peso */}
           <div className="space-y-2">
             <label className={labelClass} htmlFor="weight">

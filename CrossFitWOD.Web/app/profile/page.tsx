@@ -55,6 +55,7 @@ interface AthleteProfile {
   sessionDurationMinutes: number; equipment: string;
   weakPoints: string; injuryHistory: string | null;
   commitmentLevel: number;
+  edad: number;
 }
 
 const inputClass  = "w-full rounded-2xl border border-surface-border bg-surface-raised px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30";
