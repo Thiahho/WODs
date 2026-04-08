@@ -116,6 +116,7 @@ public class AiWodService
         // Perfil
         sb.AppendLine("## PERFIL DEL ATLETA");
         sb.AppendLine($"- Nombre: {athlete.Name}");
+        sb.AppendLine($"- Edad: {(athlete.Edad.HasValue ? $"{athlete.Edad} años" : "no especificada")}");
         sb.AppendLine($"- Nivel: {athlete.Level}");
         sb.AppendLine($"- Objetivo: {athlete.Goal}");
         sb.AppendLine($"- Días por semana: {athlete.DaysPerWeek}");
