@@ -54,9 +54,10 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Cross-Pro" width={140} height={140} />
+          <img src="/logo.png" alt="Cross-Pro" style={{ width: 140, height: 140, objectFit: "contain" }} />
+          {/* <h1 className="text-display text-4xl text-brand glow-text">CROSS-PRO</h1> */}
           <p className="text-sm text-zinc-500">Tu WOD del día, escalado para vos</p>
         </div>
 

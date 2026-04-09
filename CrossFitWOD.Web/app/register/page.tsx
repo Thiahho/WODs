@@ -50,7 +50,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         <div className="flex flex-col items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Cross-Pro" width={120} height={120} />
+          <img src="/logo.png" alt="Cross-Pro" style={{ width: 120, height: 120, objectFit: "contain" }} />
           <p className="text-sm text-zinc-500">Crear cuenta</p>
         </div>
 
