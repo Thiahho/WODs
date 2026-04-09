@@ -9,6 +9,7 @@ import { setToken, setHasProfile, setRole } from "@/lib/auth";
 import { LoginSchema, type LoginForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,8 +56,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Cross-Pro" width={140} height={140} />
+          <Image src="/logo.png" alt="Cross-Pro" width={140} height={140} />
           <p className="text-sm text-zinc-500">Tu WOD del día, escalado para vos</p>
         </div>
 

@@ -89,8 +89,8 @@ export default function HistoryPage() {
         {all.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             <StatCard label="WODs" value={totalWods} accent />
-            <StatCard label="RPE medio" value={avgRpe || "—"} sub="sobre 10" />
-            <StatCard label="Mejor vol." value={bestFactor > 0 ? `${Math.round(bestFactor * 100)}%` : "—"} />
+            <StatCard label="RPE medio" value={avgRpe || "—"} sub={`sobre ${all.length} WODs`} />
+            <StatCard label="Mejor vol." value={bestFactor > 0 ? `${Math.round(bestFactor * 100)}%` : "—"} sub="cargados" />
           </div>
         )}
 
@@ -118,9 +118,9 @@ export default function HistoryPage() {
             const detailHref = `/wod/${entry.wodId}?factor=${entry.scaledRepsFactor}&date=${entry.date}`;
             return (
               <Link
-                key={i}
+                key={`${entry.wodId}-${entry.date}`}
                 href={detailHref}
-                className="block rounded-3xl border border-surface-border bg-surface p-4 space-y-4 animate-fade-up transition-colors hover:border-zinc-600 active:bg-surface-raised"
+                className="block rounded-3xl border border-surface-border bg-surface p-4 space-y-4 transition-colors hover:border-zinc-600 active:bg-surface-raised"
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-3">

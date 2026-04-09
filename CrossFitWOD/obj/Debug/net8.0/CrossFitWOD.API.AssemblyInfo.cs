@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CrossFitWOD.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a4b8fd2df383e4f85e370bc3b71f677b2a36114d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ebe591a36ea5453c2b09bfcfee299f309a7bef4")]
 [assembly: System.Reflection.AssemblyProductAttribute("CrossFitWOD.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CrossFitWOD.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

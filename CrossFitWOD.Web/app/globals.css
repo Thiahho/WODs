@@ -32,6 +32,7 @@
   input[type="range"] {
     @apply appearance-none w-full h-1.5 rounded-full cursor-pointer;
     background: #262626;
+    touch-action: pan-y;
   }
   input[type="range"]::-webkit-slider-thumb {
     @apply appearance-none w-5 h-5 rounded-full cursor-pointer;
@@ -47,6 +48,16 @@
   /* Checkbox — neon green */
   input[type="checkbox"] {
     accent-color: #c6ff3d;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

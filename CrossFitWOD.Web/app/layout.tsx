@@ -14,6 +14,7 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   title: "CrossFitWOD",
   description: "Tu WOD del día, escalado para ti",
+  icons: { icon: "/logo.png", apple: "/logo.png" },
 };
 
 export default function RootLayout({
