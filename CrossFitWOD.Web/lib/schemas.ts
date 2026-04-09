@@ -95,17 +95,17 @@ export const RegisterSchema = z.object({
 });
 
 export const SetupProfileSchema = z.object({
-  name:                  z.string().min(1, "El nombre es requerido"),
-  edad:                  z.coerce.number().int().min(1).max(120).optional(),
-  level:                 z.coerce.number().int().min(1).max(3),
-  goal:                  z.coerce.number().int().min(1).max(4),
-  weight:                z.coerce.number().positive().optional(),
-  daysPerWeek:           z.coerce.number().int().min(1).max(7).default(3),
+  name:                   z.string().min(1, "El nombre es requerido"),
+  edad:                   z.coerce.number().int().min(1).max(120).optional(),
+  level:                  z.coerce.number().int().min(1).max(3),
+  goal:                   z.coerce.number().int().min(1).max(4),
+  weight:                 z.coerce.number().positive().optional(),
+  daysPerWeek:            z.coerce.number().int().min(1).max(7).default(3),
   sessionDurationMinutes: z.coerce.number().int().default(45),
-  equipment:             z.string().default(""),
-  weakPoints:            z.string().default(""),
-  injuryHistory:         z.string().optional(),
-  commitmentLevel:       z.coerce.number().int().min(1).max(10).default(5),
+  equipment:              z.string().default(""),
+  weakPoints:             z.string().default(""),
+  injuryHistory:          z.string().optional(),
+  commitmentLevel:        z.coerce.number().int().min(1).max(10).default(5),
 });
 
 export const ChangePasswordSchema = z.object({

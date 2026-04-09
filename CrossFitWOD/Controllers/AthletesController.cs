@@ -134,6 +134,7 @@ public class AthletesController : ControllerBase
             Level                  = dto.Level,
             Goal                   = dto.Goal,
             Weight                 = dto.Weight,
+            Edad                   = dto.Edad,
             DaysPerWeek            = dto.DaysPerWeek,
             SessionDurationMinutes = dto.SessionDurationMinutes,
             Equipment              = dto.Equipment,
@@ -158,6 +159,7 @@ public class AthletesController : ControllerBase
         athlete.Level                  = dto.Level;
         athlete.Goal                   = dto.Goal;
         athlete.Weight                 = dto.Weight;
+        athlete.Edad                   = dto.Edad;
         athlete.DaysPerWeek            = dto.DaysPerWeek;
         athlete.SessionDurationMinutes = dto.SessionDurationMinutes;
         athlete.Equipment              = dto.Equipment ?? string.Empty;
@@ -187,6 +189,7 @@ public class AthletesController : ControllerBase
         athlete.Level                  = dto.Level;
         athlete.Goal                   = dto.Goal;
         athlete.Weight                 = dto.Weight;
+        athlete.Edad                   = dto.Edad;
         athlete.DaysPerWeek            = dto.DaysPerWeek;
         athlete.SessionDurationMinutes = dto.SessionDurationMinutes;
         athlete.Equipment              = dto.Equipment ?? string.Empty;

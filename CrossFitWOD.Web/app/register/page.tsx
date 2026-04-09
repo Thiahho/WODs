@@ -8,7 +8,6 @@ import { api, ApiError } from "@/lib/api";
 import { RegisterSchema, type RegisterForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Dumbbell, Shield } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 export default function RegisterPage() {
@@ -50,7 +49,8 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         <div className="flex flex-col items-center gap-3">
-          <Image src="/logo.png" alt="Cross-Pro" width={120} height={120} priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cross-Pro" width={120} height={120} />
           <p className="text-sm text-zinc-500">Crear cuenta</p>
         </div>
 

@@ -47,7 +47,7 @@ public class Athlete
     public int  BoxId { get; set; }
    
     [Column("edad")]
-    public int  Edad { get; set; }
+    public int? Edad { get; set; }
     public Box  Box   { get; set; } = null!;
 
     public ICollection<AthleteGroup>      AthleteGroups { get; set; } = [];
