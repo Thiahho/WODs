@@ -48,10 +48,10 @@ export default function RegisterPage() {
       <div className="pointer-events-none absolute inset-0 bg-brand-radial" />
 
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
-        <div className="text-center space-y-1">
-          <h1 className="text-display text-5xl text-brand glow-text">CrossFit</h1>
-          <h2 className="text-display text-3xl text-zinc-100">WOD</h2>
-          <p className="text-sm text-zinc-500 mt-2">Crear cuenta</p>
+        <div className="flex flex-col items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cross-Pro" width={120} height={120} />
+          <p className="text-sm text-zinc-500">Crear cuenta</p>
         </div>
 
         {/* Role selector */}

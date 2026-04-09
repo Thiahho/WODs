@@ -54,10 +54,10 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm space-y-8 animate-fade-up">
         {/* Logo */}
-        <div className="text-center space-y-1">
-          <h1 className="text-display text-5xl text-brand glow-text">CrossFit</h1>
-          <h2 className="text-display text-3xl text-zinc-100">WOD</h2>
-          <p className="text-sm text-zinc-500 mt-2">Tu WOD del día, escalado para vos</p>
+        <div className="flex flex-col items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Cross-Pro" width={140} height={140} />
+          <p className="text-sm text-zinc-500">Tu WOD del día, escalado para vos</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
