@@ -6,6 +6,7 @@ using CrossFitWOD.Entities;
 using CrossFitWOD.Enums;
 using CrossFitWOD.Exceptions;
 using CrossFitWOD.Persistence;
+using CrossFitWOD.Persistence.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,61 +33,53 @@ public class AiWodService
     // ── Punto de entrada ──────────────────────────────────────────────────────
     public async Task<AiWodResponseDto> GenerateForAthleteAsync(int athleteId)
     {
-        var athlete = await _db.Athletes
-            .FirstOrDefaultAsync(a => a.Id == athleteId)
-            ?? throw new NotFoundException("Atleta no encontrado.");
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        // Verificar si ya existe sesión hoy
-        var existingSession = await _db.WorkoutSessions
-            .Include(s => s.Wod)
-            .FirstOrDefaultAsync(s => s.BoxId == athlete.BoxId && s.Date == today);
-
-        if (existingSession is not null)
-            return MapSessionToDto(existingSession);
-
-        // ── Recopilar contexto ────────────────────────────────────────────────
-        var status = await _db.AthleteStatuses
-            .Where(s => s.AthleteId == athleteId)
-            .OrderByDescending(s => s.UpdatedAt)
-            .FirstOrDefaultAsync();
-
-        var recentLogs = await _db.AthleteDailyLogs
-            .Where(l => l.AthleteId == athleteId)
-            .OrderByDescending(l => l.CreatedAt)
-            .Take(5)
-            .ToListAsync();
-
-        var recentResults = await _db.AthleteWorkouts
-            .Where(aw => aw.AthleteId == athleteId && aw.Result != null)
-            .Include(aw => aw.Result)
-            .Include(aw => aw.WorkoutSession).ThenInclude(s => s.Wod)
-            .OrderByDescending(aw => aw.WorkoutSession.Date)
-            .Take(5)
-            .ToListAsync();
-
-        // ── Contexto semanal ──────────────────────────────────────────────────
+        var today     = DateOnly.FromDateTime(DateTime.UtcNow);
         var weekStart = today.AddDays(-(int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1);
-        var sessionsThisWeek = await _db.AthleteWorkouts
-            .Where(aw => aw.AthleteId == athleteId && aw.WorkoutSession.Date >= weekStart && aw.WorkoutSession.Date <= today)
-            .CountAsync();
 
-        // ── Llamar Claude API ─────────────────────────────────────────────────
-        var userMessage = BuildUserMessage(athlete, status, recentLogs, recentResults, today, sessionsThisWeek);
+        // ── Query 1: perfil + estado + sesiones recientes (vista) ─────────────
+        var contextRows = await _db.AthleteWodContexts
+            .Where(r => r.AthleteId == athleteId &&
+                        (r.SessionDate == null || r.SessionDate >= today.AddDays(-30)))
+            .OrderByDescending(r => r.SessionDate)
+            .ToListAsync();
+
+        if (contextRows.Count == 0)
+            throw new NotFoundException("Atleta no encontrado.");
+
+        var profile = contextRows.First();
+
+        // Verificar si ya existe sesión hoy para este box
+        var todayRow = contextRows.FirstOrDefault(r => r.SessionDate == today && r.SessionId.HasValue);
+        if (todayRow is not null)
+            return MapViewToDto(todayRow);
+
+        // ── Query 2: logs diarios con promedios (vista) ───────────────────────
+        var logRows = await _db.AthleteDailyLogSummaries
+            .Where(r => r.AthleteId == athleteId)
+            .OrderBy(r => r.LogRank)
+            .ToListAsync();
+
+        // Derivar datos del contexto
+        var recentResults    = contextRows.Where(r => r.ResultId.HasValue).Take(5).ToList();
+        var sessionsThisWeek = contextRows.Count(r => r.SessionDate >= weekStart &&
+                                                      r.SessionDate <= today &&
+                                                      r.AthleteWorkoutId.HasValue);
+
+        // ── Llamar AI ─────────────────────────────────────────────────────────
+        var userMessage = BuildUserMessage(profile, logRows, recentResults, today, sessionsThisWeek);
         var rawResponse = await CallOpenAiWithRetryAsync(userMessage);
 
         // ── Parsear y guardar ─────────────────────────────────────────────────
         var parsed  = ParseResponse(rawResponse);
-        var wod     = await SaveWodAsync(parsed, athlete, today);
-        var session = await SaveSessionAsync(wod, athlete.BoxId, today);
+        var wod     = await SaveWodAsync(parsed, profile, today);
+        var session = await SaveSessionAsync(wod, profile.BoxId, today);
 
         return new AiWodResponseDto(
             WodId:             wod.Id,
             WorkoutSessionId:  session.Id,
             Title:             wod.Title,
             Intensity:         wod.Intensity ?? "moderate",
-            Focus:             wod.Focus ?? "general",
+            Focus:             wod.Focus     ?? "general",
             DurationMinutes:   wod.DurationMinutes,
             WarmUp:            wod.WarmUp,
             StrengthSkill:     wod.StrengthSkill,
@@ -101,124 +94,278 @@ public class AiWodService
 
     // ── Construcción del mensaje ──────────────────────────────────────────────
     private static string BuildUserMessage(
-        Athlete athlete,
-        AthleteStatus? status,
-        List<AthleteDailyLogs> logs,
-        List<AthleteWorkout> results,
-        DateOnly today,
-        int sessionsThisWeek)
+        AthleteWodContextView            profile,
+        List<AthleteDailyLogSummaryView> logs,
+        List<AthleteWodContextView>      recentResults,
+        DateOnly                         today,
+        int                              sessionsThisWeek)
     {
-        var sb = new StringBuilder();
+        var signals = ComputeSignals(profile, logs, recentResults);
+        var sb      = new StringBuilder();
 
-        sb.AppendLine($"Hoy es {today:dddd dd/MM/yyyy}. Genera el WOD para este atleta.");
+        sb.AppendLine($"Hoy es {today:dddd dd/MM/yyyy}.");
         sb.AppendLine();
 
-        // Perfil
+        // ── 1. PERFIL ─────────────────────────────────────────────────────────
         sb.AppendLine("## PERFIL DEL ATLETA");
-        sb.AppendLine($"- Nombre: {athlete.Name}");
-        sb.AppendLine($"- Nivel: {athlete.Level}");
-        sb.AppendLine($"- Objetivo: {athlete.Goal}");
-        sb.AppendLine($"- Días por semana: {athlete.DaysPerWeek}");
-        sb.AppendLine($"- Duración de sesión: {athlete.SessionDurationMinutes} minutos");
-        sb.AppendLine($"- Equipamiento disponible: {(string.IsNullOrWhiteSpace(athlete.Equipment) ? "solo bodyweight" : athlete.Equipment)}");
-        sb.AppendLine($"- Puntos débiles: {(string.IsNullOrWhiteSpace(athlete.WeakPoints) ? "ninguno declarado" : athlete.WeakPoints)}");
-        sb.AppendLine($"- Historial de lesiones: {(string.IsNullOrWhiteSpace(athlete.InjuryHistory) ? "ninguna" : athlete.InjuryHistory)}");
-        sb.AppendLine($"- Nivel de compromiso: {athlete.CommitmentLevel}/10");
+        sb.AppendLine($"- Nombre: {profile.AthleteName}");
+        sb.AppendLine($"- Nivel CrossFit: {LevelLabel(profile.AthleteLevel)}");
+        sb.AppendLine($"- Objetivo: {GoalLabel(profile.AthleteGoal)}");
+        sb.AppendLine($"- Días de entrenamiento por semana: {profile.DaysPerWeek}");
+        sb.AppendLine($"- Duración preferida de sesión: {profile.SessionDurationMinutes} min");
+        sb.AppendLine($"- Equipamiento disponible: {(string.IsNullOrWhiteSpace(profile.Equipment) ? "SOLO BODYWEIGHT (sin ningún equipo)" : profile.Equipment)}");
+        sb.AppendLine($"- Puntos débiles a desarrollar: {(string.IsNullOrWhiteSpace(profile.WeakPoints) ? "ninguno declarado" : profile.WeakPoints)}");
+        sb.AppendLine($"- Historial de lesiones: {(string.IsNullOrWhiteSpace(profile.InjuryHistory) ? "ninguna" : profile.InjuryHistory)}");
+        sb.AppendLine($"- Nivel de compromiso: {profile.CommitmentLevel}/10");
         sb.AppendLine();
 
-        // Estado calculado
-        sb.AppendLine("## ESTADO ACTUAL");
-        if (status is not null)
+        // ── 2. SEÑALES PRE-CALCULADAS (análisis del sistema) ─────────────────
+        sb.AppendLine("## SEÑALES DEL SISTEMA");
+        sb.AppendLine($"- Deload obligatorio: {(signals.DeloadNeeded ? "SÍ ⚠️" : "NO")}");
+        if (signals.DeloadNeeded)
+            sb.AppendLine($"  → Motivo: {signals.DeloadReason}");
+        sb.AppendLine($"- Estado subjetivo hoy vs promedio 7d: {signals.SubjectiveStateSummary}");
+        if (signals.AvgRpe.HasValue)
+            sb.AppendLine($"- RPE promedio últimas {recentResults.Count} sesiones: {signals.AvgRpe:F1}/10" +
+                          (signals.AvgRpe > 8.5 ? " → SOBRECARGA percibida" :
+                           signals.AvgRpe < 6   ? " → Carga muy baja, podés intensificar" : " → Zona normal"));
+        if (signals.CompletionRate.HasValue)
+            sb.AppendLine($"- Tasa de finalización reciente: {signals.CompletionRate:P0}" +
+                          (signals.CompletionRate < 0.6 ? " → WODs muy exigentes, reducí volumen" : ""));
+        sb.AppendLine($"- Patrones musculares dominantes recientes: {signals.RecentMovementPattern}");
+        sb.AppendLine($"  → El WOD de hoy DEBE trabajar principalmente: {signals.SuggestedPattern}");
+        sb.AppendLine();
+
+        // ── 3. ESTADO CALCULADO (AthleteStatus) ──────────────────────────────
+        sb.AppendLine("## ESTADO FISIOLÓGICO CALCULADO");
+        if (profile.StatusId.HasValue)
         {
-            sb.AppendLine($"- Readiness: {status.Readiness ?? "desconocido"}");
-            sb.AppendLine($"- Fatiga: {status.FatigueLevel:F1}/100");
-            sb.AppendLine($"- Recuperación: {status.RecoveryScore:F1}/100");
-            sb.AppendLine($"- Ratio de carga (acuda/crónica): {status.LoadRatio:F2} (ideal 0.8–1.3)");
-            sb.AppendLine($"- Tendencia de rendimiento: {status.PerformanceTrend ?? "sin datos"}");
-            sb.AppendLine($"- Riesgo de lesión: {status.InjuryRisk ?? "desconocido"}");
+            sb.AppendLine($"- Readiness: {profile.Readiness ?? "desconocido"}");
+            sb.AppendLine($"- Fatiga acumulada: {profile.StatusFatigueLevel:F1}/100");
+            sb.AppendLine($"- Score de recuperación: {profile.RecoveryScore:F1}/100");
+            sb.AppendLine($"- Ratio carga aguda/crónica: {profile.LoadRatio:F2} — {profile.LoadRatioLabel}");
+            sb.AppendLine($"- Tendencia de rendimiento: {profile.PerformanceTrend ?? "sin datos"}");
+            sb.AppendLine($"- Riesgo de lesión: {profile.InjuryRisk ?? "desconocido"}");
         }
         else
         {
-            sb.AppendLine("- Sin datos de estado calculado aún.");
+            sb.AppendLine("- Sin datos calculados aún (atleta nuevo).");
         }
         sb.AppendLine();
 
-        // Logs diarios recientes
-        sb.AppendLine("## LOGS DIARIOS RECIENTES");
+        // ── 4. ESTADO SUBJETIVO HOY ───────────────────────────────────────────
+        sb.AppendLine("## ESTADO SUBJETIVO (check-ins diarios, últimos 7 días)");
         if (logs.Count == 0)
         {
-            sb.AppendLine("- Sin logs diarios registrados.");
+            sb.AppendLine("- No hizo check-in hoy. Usá el estado fisiológico calculado como referencia.");
         }
         else
         {
-            foreach (var log in logs)
-            {
-                sb.AppendLine($"- {log.CreatedAt:dd/MM}: energía={log.EnergyLevel}/10, fatiga={log.FatigueLevel}/10, " +
-                              $"sueño={log.SleepHours?.ToString("F1") ?? "?"}h" +
-                              (string.IsNullOrWhiteSpace(log.PainNotes)   ? "" : $", dolor: {log.PainNotes}") +
-                              (string.IsNullOrWhiteSpace(log.MentalState) ? "" : $", mental: {log.MentalState}") +
-                              (string.IsNullOrWhiteSpace(log.Notes)       ? "" : $", notas: {log.Notes}"));
-            }
+            var latest = logs.First();
+            sb.AppendLine($"- HOY: energía={latest.EnergyLevel}/10, fatiga={latest.FatigueLevel}/10, " +
+                          $"sueño={latest.SleepHours?.ToString("F1") ?? "?"}h" +
+                          (string.IsNullOrWhiteSpace(latest.PainNotes)   ? "" : $" | DOLOR: {latest.PainNotes}") +
+                          (string.IsNullOrWhiteSpace(latest.MentalState) ? "" : $" | mental: {latest.MentalState}") +
+                          (string.IsNullOrWhiteSpace(latest.Notes)       ? "" : $" | notas: {latest.Notes}"));
+            if (latest.AvgEnergy7d.HasValue)
+                sb.AppendLine($"- Promedios 7d: energía={latest.AvgEnergy7d:F1}/10, " +
+                              $"fatiga={latest.AvgFatigue7d:F1}/10, sueño={latest.AvgSleep7d?.ToString("F1") ?? "?"}h");
+            foreach (var log in logs.Skip(1))
+                sb.AppendLine($"  {log.LogDate:dd/MM}: E={log.EnergyLevel} F={log.FatigueLevel}" +
+                              (string.IsNullOrWhiteSpace(log.CheckinAlert) ? "" : $" [{log.CheckinAlert}]"));
         }
         sb.AppendLine();
 
-        // Contexto semanal
+        // ── 5. CONTEXTO SEMANAL ───────────────────────────────────────────────
         sb.AppendLine("## CONTEXTO SEMANAL");
-        var remainingThisWeek = Math.Max(0, athlete.DaysPerWeek - sessionsThisWeek);
-        sb.AppendLine($"- Sesiones planificadas por semana: {athlete.DaysPerWeek}");
-        sb.AppendLine($"- Sesiones completadas esta semana: {sessionsThisWeek}");
-        sb.AppendLine($"- Sesiones restantes esta semana: {remainingThisWeek}");
-        if (sessionsThisWeek == 0)
-            sb.AppendLine("- Es el primer entrenamiento de la semana — podés arrancar con más intensidad si el readiness lo permite.");
-        else if (remainingThisWeek == 0)
-            sb.AppendLine("- Es el último entrenamiento de la semana — considerá reducir la intensidad o enfocar en movilidad/técnica.");
-        else if (sessionsThisWeek >= athlete.DaysPerWeek - 1)
-            sb.AppendLine("- Queda solo una sesión más esta semana — planificá en función de la recuperación acumulada.");
+        var remaining = Math.Max(0, profile.DaysPerWeek - sessionsThisWeek);
+        sb.AppendLine($"- Plan: {profile.DaysPerWeek} días/semana | Completados: {sessionsThisWeek} | Restantes: {remaining}");
+        sb.AppendLine(sessionsThisWeek switch
+        {
+            0                                              => "- PRIMER sesión de la semana → mayor intensidad posible según readiness.",
+            _ when remaining == 0                          => "- ÚLTIMA sesión de la semana → enfocá en técnica, movilidad o metcon corto.",
+            _ when sessionsThisWeek >= profile.DaysPerWeek - 1 => "- Penúltima sesión → moderá el volumen para llegar bien al último día.",
+            _                                              => "- Sesión intermedia → balanceá fuerza y metcon según el patrón muscular pendiente."
+        });
         sb.AppendLine();
 
-        // Resultados recientes
-        sb.AppendLine("## HISTORIAL DE ENTRENAMIENTOS RECIENTES");
-        if (results.Count == 0)
+        // ── 6. HISTORIAL DE ENTRENAMIENTOS ───────────────────────────────────
+        sb.AppendLine("## HISTORIAL RECIENTE (últimas sesiones con resultado)");
+        if (recentResults.Count == 0)
         {
-            sb.AppendLine("- Sin entrenamientos registrados aún.");
+            sb.AppendLine("- Sin historial. Empezá con carga moderada y evaluá la respuesta.");
         }
         else
         {
-            foreach (var aw in results)
+            foreach (var r in recentResults)
             {
-                var r = aw.Result!;
-                sb.AppendLine($"- {aw.WorkoutSession.Date:dd/MM} | {aw.WorkoutSession.Wod.Title} | " +
-                              $"completado={r.Completed} | RPE={r.Rpe}/10 | " +
-                              $"tiempo={r.TimeSeconds?.ToString() ?? "-"}s | reps={r.Rounds?.ToString() ?? "-"}" +
-                              (string.IsNullOrWhiteSpace(r.Notes) ? "" : $" | nota: \"{r.Notes}\""));
+                sb.AppendLine($"### {r.SessionDate:dd/MM} — {r.WodTitle} ({r.WodFocus ?? "general"})");
+                sb.AppendLine($"  Resultado: completado={r.ResultCompleted} | RPE={r.ResultRpe}/10" +
+                              (r.ResultTimeSeconds.HasValue ? $" | tiempo={r.ResultTimeSeconds}s" : "") +
+                              (r.ResultRounds.HasValue      ? $" | rondas={r.ResultRounds}"       : "") +
+                              (string.IsNullOrWhiteSpace(r.ResultNotes) ? "" : $"\n  Nota: \"{r.ResultNotes}\""));
+                // Incluir el WOD real para que la IA evite repetir movimientos
+                if (!string.IsNullOrWhiteSpace(r.WodMetcon))
+                {
+                    var metconPreview = r.WodMetcon.Length > 300 ? r.WodMetcon[..300] + "…" : r.WodMetcon;
+                    sb.AppendLine($"  WOD: {metconPreview}");
+                }
             }
         }
         sb.AppendLine();
 
+        // ── 7. INSTRUCCIÓN FINAL ──────────────────────────────────────────────
         sb.AppendLine("## INSTRUCCIÓN");
-        sb.AppendLine("Genera el WOD de hoy respetando ESTRICTAMENTE el equipamiento disponible.");
-        sb.AppendLine("No incluyas ningún ejercicio que requiera equipo que el atleta NO tiene.");
-        sb.AppendLine("Adapta la intensidad según el readiness y los logs recientes.");
-        sb.AppendLine("Devuelve SOLO el siguiente JSON (sin markdown, sin texto extra):");
+        if (signals.DeloadNeeded)
+            sb.AppendLine($"⚠️ DELOAD OBLIGATORIO: {signals.DeloadReason}. Intensidad = low, volumen reducido al 50%.");
+        sb.AppendLine($"Generá el WOD de hoy para {profile.AthleteName} usando SOLO el equipamiento declarado.");
+        sb.AppendLine($"Duracion objetivo: {profile.SessionDurationMinutes} minutos totales.");
+        sb.AppendLine("En coach_notes explicá POR QUÉ tomaste cada decisión citando datos concretos del atleta.");
+        sb.AppendLine("Devolvé SOLO el siguiente JSON (sin markdown, sin texto extra):");
         sb.AppendLine("""
 {
-  "title": "string",
+  "title": "string — nombre creativo del WOD",
   "intensity": "low|moderate|high|deload",
-  "focus": "string (fuerza, resistencia, gymnasia, etc.)",
+  "focus": "string — ej: fuerza posterior, gimnasia empuje, metcon aeróbico",
   "duration_minutes": number,
-  "warm_up": "string con el warm-up completo",
-  "strength_skill": "string con la parte de fuerza o skill",
-  "metcon": "string con el WOD principal (AMRAP/EMOM/For Time con reps, tiempo y ejercicios)",
-  "scaling": "string con opciones RX / RX+ / escalado",
-  "cool_down": "string con el cooldown y movilidad",
-  "coach_notes": "string con análisis, progreso detectado y tips del coach",
-  "alert": "string o null — alerta de fatiga/riesgo/estancamiento si corresponde",
-  "nutrition_tip": "string o null — recomendación nutricional del día"
+  "warm_up": "string — calentamiento específico para los movimientos del WOD (5-10 min)",
+  "strength_skill": "string — parte de fuerza o skill con sets×reps y % o RPE sugerido",
+  "metcon": "string — WOD principal con formato (AMRAP X min / For Time / EMOM X), ejercicios, reps exactas y pesos sugeridos por nivel",
+  "scaling": "string — 3 versiones: RX+ | RX | Escalado, con las modificaciones concretas",
+  "cool_down": "string — vuelta a la calma con movilidad específica (5 min)",
+  "coach_notes": "string — análisis personalizado: qué datos del atleta determinaron este WOD, qué progreso se detecta y qué debe enfocarse",
+  "alert": "string|null — alerta si hay señal de sobreentrenamiento, lesión latente o estancamiento",
+  "nutrition_tip": "string|null — recomendación nutricional concreta para hoy (pre/post entreno)"
 }
 """);
 
         return sb.ToString();
     }
+
+    // ── Pre-análisis de señales ───────────────────────────────────────────────
+    private static CoachSignals ComputeSignals(
+        AthleteWodContextView            profile,
+        List<AthleteDailyLogSummaryView> logs,
+        List<AthleteWodContextView>      results)
+    {
+        // RPE y completion rate
+        var rpeSamples      = results.Where(r => r.ResultRpe.HasValue).Select(r => r.ResultRpe!.Value).ToList();
+        var avgRpe          = rpeSamples.Count > 0 ? rpeSamples.Average() : (double?)null;
+        var completionRate  = results.Count > 0
+            ? (double)results.Count(r => r.ResultCompleted == true) / results.Count
+            : (double?)null;
+
+        // Estado subjetivo hoy vs promedio
+        var todayLog = logs.FirstOrDefault();
+        string subjectiveSummary;
+        if (todayLog is null)
+        {
+            subjectiveSummary = "sin check-in hoy";
+        }
+        else
+        {
+            var energyDelta = todayLog.AvgEnergy7d.HasValue
+                ? todayLog.EnergyLevel - todayLog.AvgEnergy7d.Value
+                : 0;
+            var label = energyDelta >= 1  ? "MEJOR que su promedio" :
+                        energyDelta <= -2 ? "PEOR que su promedio — reducir volumen" :
+                                           "similar a su promedio";
+            subjectiveSummary = $"energía hoy={todayLog.EnergyLevel}/10, fatiga={todayLog.FatigueLevel}/10 ({label})";
+        }
+
+        // Señal de deload
+        var deloadReasons = new List<string>();
+        if (profile.LoadRatio > 1.3f)       deloadReasons.Add($"ratio carga {profile.LoadRatio:F2} > 1.3");
+        if (profile.Readiness == "low")      deloadReasons.Add("readiness = low");
+        if (avgRpe > 8.5)                    deloadReasons.Add($"RPE promedio {avgRpe:F1} > 8.5");
+        if (completionRate < 0.5)            deloadReasons.Add($"tasa de finalización {completionRate:P0} < 50%");
+        if (todayLog?.EnergyLevel <= 3)      deloadReasons.Add($"energía hoy = {todayLog!.EnergyLevel}/10 (crítica)");
+        var deloadNeeded = deloadReasons.Count > 0;
+
+        // Patrones musculares recientes
+        var recentFocuses = results
+            .Where(r => !string.IsNullOrWhiteSpace(r.WodFocus))
+            .Select(r => r.WodFocus!)
+            .Take(3)
+            .ToList();
+
+        var (recentPattern, suggestedPattern) = DetermineMovementBalance(recentFocuses, results);
+
+        return new CoachSignals(
+            AvgRpe:                avgRpe,
+            CompletionRate:        completionRate,
+            SubjectiveStateSummary: subjectiveSummary,
+            DeloadNeeded:          deloadNeeded,
+            DeloadReason:          deloadNeeded ? string.Join(", ", deloadReasons) : null,
+            RecentMovementPattern: recentPattern,
+            SuggestedPattern:      suggestedPattern
+        );
+    }
+
+    // Detecta el balance push/pull/hinge/squat de las sesiones recientes
+    private static (string recent, string suggested) DetermineMovementBalance(
+        List<string> recentFocuses, List<AthleteWodContextView> results)
+    {
+        var allText = string.Join(" ",
+            recentFocuses
+            .Concat(results.Select(r => r.WodTitle   ?? ""))
+            .Concat(results.Select(r => r.WodMetcon  ?? ""))
+        ).ToLowerInvariant();
+
+        var hasHinge  = allText.ContainsAny("deadlift", "rdl", "swing", "clean", "snatch", "posterior");
+        var hasSquat  = allText.ContainsAny("squat", "thruster", "wall ball", "lunge", "piernas");
+        var hasPush   = allText.ContainsAny("press", "push", "empuje", "jerk", "dip", "hspu");
+        var hasPull   = allText.ContainsAny("pull", "row", "ring row", "muscle-up", "tracción");
+        var hasCardio = allText.ContainsAny("run", "row 500", "double-under", "burpee", "cardio");
+
+        var recent = new List<string>();
+        if (hasHinge)  recent.Add("bisagra/posterior");
+        if (hasSquat)  recent.Add("sentadilla/piernas");
+        if (hasPush)   recent.Add("empuje");
+        if (hasPull)   recent.Add("tracción");
+        if (hasCardio) recent.Add("cardio");
+        var recentStr = recent.Count > 0 ? string.Join(", ", recent) : "sin datos";
+
+        // Sugerir el dominio menos entrenado
+        var missing = new List<string>();
+        if (!hasHinge)  missing.Add("bisagra de cadera (deadlift/clean)");
+        if (!hasSquat)  missing.Add("sentadilla");
+        if (!hasPush)   missing.Add("empuje");
+        if (!hasPull)   missing.Add("tracción");
+        if (!hasCardio) missing.Add("componente aeróbico");
+        var suggestedStr = missing.Count > 0 ? string.Join(" y ", missing.Take(2)) : "balance libre (todos los patrones cubiertos)";
+
+        return (recentStr, suggestedStr);
+    }
+
+    private static string LevelLabel(int level) => level switch
+    {
+        1 => "Principiante (movimientos básicos, técnica en desarrollo)",
+        2 => "Amateur (movimientos establecidos, carga moderada)",
+        3 => "Intermedio / Scaled (buena base, puede hacer RX en muchos WODs)",
+        4 => "Avanzado / RX (alto nivel técnico, cargas altas)",
+        5 => "Elite (atleta competitivo, sin restricciones de programación)",
+        _ => $"Nivel {level}"
+    };
+
+    private static string GoalLabel(int goal) => goal switch
+    {
+        1 => "General (salud, bienestar, mantenerse activo)",
+        2 => "Fitness (mejorar condición física y composición corporal)",
+        3 => "Competencia (rendir en competencias CrossFit)",
+        4 => "Rehabilitación (volver a entrenar con cuidado)",
+        _ => $"Objetivo {goal}"
+    };
+
+    private record CoachSignals(
+        double?  AvgRpe,
+        double?  CompletionRate,
+        string   SubjectiveStateSummary,
+        bool     DeloadNeeded,
+        string?  DeloadReason,
+        string   RecentMovementPattern,
+        string   SuggestedPattern
+    );
 
     // ── Retry con backoff exponencial ────────────────────────────────────────
     private async Task<string> CallOpenAiWithRetryAsync(string userMessage)
@@ -319,12 +466,12 @@ public class AiWodService
     }
 
     // ── Persistencia ─────────────────────────────────────────────────────────
-    private async Task<Wod> SaveWodAsync(ParsedWod p, Athlete athlete, DateOnly today)
+    private async Task<Wod> SaveWodAsync(ParsedWod p, AthleteWodContextView profile, DateOnly today)
     {
         var wod = new Wod
         {
             Title           = p.Title,
-            Description     = $"WOD generado por IA para {athlete.Name} — {today:dd/MM/yyyy}",
+            Description     = $"WOD generado por IA para {profile.AthleteName} — {today:dd/MM/yyyy}",
             Type            = DetermineWodType(p.Metcon),
             DurationMinutes = p.DurationMinutes,
             Intensity       = p.Intensity,
@@ -351,40 +498,71 @@ public class AiWodService
         return session;
     }
 
-    private static AiWodResponseDto MapSessionToDto(WorkoutSession s) => new(
-        WodId:            s.Wod.Id,
-        WorkoutSessionId: s.Id,
-        Title:            s.Wod.Title,
-        Intensity:        s.Wod.Intensity ?? "moderate",
-        Focus:            s.Wod.Focus     ?? "general",
-        DurationMinutes:  s.Wod.DurationMinutes,
-        WarmUp:           s.Wod.WarmUp,
-        StrengthSkill:    s.Wod.StrengthSkill,
-        Metcon:           s.Wod.Metcon,
-        Scaling:          s.Wod.Scaling,
-        CoolDown:         s.Wod.CoolDown,
-        CoachNotes:       s.Wod.CoachNotes,
+    private static AiWodResponseDto MapViewToDto(AthleteWodContextView r) => new(
+        WodId:            r.WodId!.Value,
+        WorkoutSessionId: r.SessionId!.Value,
+        Title:            r.WodTitle         ?? "WOD del día",
+        Intensity:        r.WodIntensity     ?? "moderate",
+        Focus:            r.WodFocus         ?? "general",
+        DurationMinutes:  r.WodDurationMinutes ?? 20,
+        WarmUp:           r.WodWarmup,
+        StrengthSkill:    r.WodStrengthSkill,
+        Metcon:           r.WodMetcon,
+        Scaling:          r.WodScaling,
+        CoolDown:         r.WodCooldown,
+        CoachNotes:       r.WodCoachNotes,
         Alert:            null,
         NutritionTip:     null);
 
     // ── System prompt ─────────────────────────────────────────────────────────
     private const string SystemPrompt = """
-        Sos un entrenador de CrossFit de alto rendimiento, científico del deporte y coach de atletas competitivos.
-        Tu función es generar WODs completamente personalizados basados en los datos reales del atleta.
+        Sos un head coach de CrossFit de alto rendimiento con 15 años de experiencia programando para atletas individuales.
+        Tu especialidad es la periodización basada en datos: usás métricas reales (RPE, completion rate, load ratio, logs diarios) para tomar decisiones de programación que maximizan el rendimiento y minimizan el riesgo de lesión.
 
-        IDIOMA: Respondé SIEMPRE en español rioplatense (argentino). Usá "vos", "hacé", "empezá", etc.
-        Nunca uses "tú", "haz", "empieza" ni otras formas del español neutro o peninsular.
+        IDIOMA: Respondé SIEMPRE en español rioplatense (argentino). "vos", "hacé", "empezá", "fijate", "acomodá". Nunca uses "tú" ni español neutro.
 
-        PRINCIPIOS FUNDAMENTALES:
-        - NUNCA uses equipamiento que el atleta no tiene disponible.
-        - Ajustá la intensidad según el readiness, fatiga y logs diarios.
-        - Aplicá periodización real: si hay fatiga alta o ratio > 1.3 → deload.
-        - Si hay lesiones → evitá ejercicios que afecten esa zona.
-        - Integrá fuerza, halterofilia, gimnasia y resistencia según el objetivo.
-        - Incluí siempre: warm-up, strength/skill, metcon, cooldown y opciones de escalado.
-        - El WOD debe ser específico y detallado: reps exactas, tiempos, pesos recomendados.
-        - Usá el contexto semanal para periodizar: primer día de semana → mayor intensidad posible; último día → técnica o movilidad; días intermedios → varía entre fuerza y metcon.
-        - Respondé SOLO con el JSON solicitado, sin ningún texto adicional.
+        ═══════════════════════════════════════════════
+        ÁRBOL DE DECISIÓN — seguilo en orden estricto
+        ═══════════════════════════════════════════════
+
+        PASO 1 — DELOAD (verificar primero):
+          Si el campo "Deload obligatorio" dice SÍ → intensidad = "deload", volumen -50%, sin carga máxima, foco en movilidad y técnica. No hay excepción.
+
+        PASO 2 — INTENSIDAD (si no es deload):
+          - Readiness "high" + LoadRatio 0.8-1.1 + energía hoy ≥ 7 → "high"
+          - Readiness "moderate" O LoadRatio 1.1-1.3 O energía 5-6 → "moderate"
+          - Readiness "low" O energía ≤ 4 O RPE promedio > 8 → "low"
+          - Atleta nuevo sin datos → "moderate" por defecto
+
+        PASO 3 — PATRÓN DE MOVIMIENTO (campo "El WOD de hoy DEBE trabajar principalmente"):
+          Respetá la sugerencia del sistema. Variedad de patrones semana a semana es obligatoria.
+          Un buen WOD semanal cubre: empuje + tracción + bisagra/posterior + sentadilla + cardio.
+
+        PASO 4 — EQUIPAMIENTO (NO NEGOCIABLE):
+          Si el atleta NO tiene un equipo, ese ejercicio NO EXISTE para vos.
+          Ejemplo: sin barbell → no hay deadlifts, cleans, thrusters con barra. Punto.
+
+        PASO 5 — NIVEL:
+          Principiante  → volumen bajo, técnica primero, sin carga máxima
+          Amateur/Scaled → volumen moderado, carga al 70-80% percibido
+          Avanzado/RX    → volumen estándar, incluir variantes técnicas complejas
+          Elite          → volumen alto, movimientos olímpicos, carga máxima
+
+        PASO 6 — LESIONES:
+          Si hay lesión activa → excluí TODOS los movimientos que carguen esa zona.
+          Documentalo en coach_notes.
+
+        ═══════════════════════════════════════════════
+        REGLAS DE CALIDAD DEL WOD
+        ═══════════════════════════════════════════════
+        - El WOD tiene que sumar exactamente la duración declarada (warm-up + strength + metcon + cooldown).
+        - Metcon: especificá el formato exacto (AMRAP X min / For Time / EMOM X×Y), los ejercicios, las reps y los pesos sugeridos por nivel.
+        - Strength/Skill: sets × reps + % de 1RM sugerido O RPE objetivo.
+        - Scaling: 3 versiones concretas (RX+ / RX / Escalado) con modificaciones específicas.
+        - NO repitas patrones de movimiento dominantes en las últimas 3 sesiones.
+        - coach_notes DEBE citar datos concretos del atleta: "Como tu RPE promedio fue X...", "Dado que tu energía hoy está Y puntos por debajo de tu promedio...".
+
+        RESPONDÉ SOLO con el JSON. Cero texto fuera del JSON.
         """;
 
     private static WodType DetermineWodType(string? metcon)
@@ -402,7 +580,13 @@ public class AiWodService
         string? CoolDown, string? CoachNotes, string? Alert, string? NutritionTip);
 }
 
-// ── Extension helper ──────────────────────────────────────────────────────────
+// ── Extension helpers ─────────────────────────────────────────────────────────
+file static class StringExtensions
+{
+    public static bool ContainsAny(this string source, params string[] values) =>
+        values.Any(v => source.Contains(v, StringComparison.OrdinalIgnoreCase));
+}
+
 file static class JsonElementExtensions
 {
     public static string? TryGet(this JsonElement el, string key) =>

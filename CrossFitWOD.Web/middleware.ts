@@ -26,7 +26,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/workout", request.url));
   }
 
-  // Admin autenticado → acceso libre a /admin (no necesita perfil de atleta)
+  // Admin autenticado en rutas de atleta → necesita perfil de atleta
+  if (isAdmin && !pathname.startsWith("/admin")) {
+    // Puede acceder a /profile para crear/editar su perfil de atleta
+    if (pathname === "/profile" || publicPaths.includes(pathname)) return NextResponse.next();
+    // Sin perfil de atleta → crear primero
+    if (!hasProfile) return NextResponse.redirect(new URL("/profile", request.url));
+    return NextResponse.next();
+  }
+
+  // Admin autenticado en /admin → acceso libre
   if (isAdmin) return NextResponse.next();
 
   // --- Flujo atleta ---

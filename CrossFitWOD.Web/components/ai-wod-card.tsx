@@ -6,7 +6,7 @@ import { ResultForm } from "./result-form";
 import { Chip } from "@/components/ui/chip";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { WorkoutResultResponse } from "@/hooks/use-register-result";
-import { Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad, AlertTriangle, Clock, Target } from "lucide-react";
+import { Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad, AlertTriangle, Clock, Target, ChevronDown } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -79,15 +79,21 @@ function detectWodType(metcon?: string | null): string {
 interface AiWodCardProps {
   wod: AiWod;
   athleteWorkoutId?: number;
+  scaledRepsFactor?: number;
 }
 
-export function AiWodCard({ wod, athleteWorkoutId }: AiWodCardProps) {
-  const [showForm, setShowForm] = useState(false);
-  const [result, setResult]     = useState<WorkoutResultResponse | null>(null);
+export function AiWodCard({ wod, athleteWorkoutId, scaledRepsFactor = 1 }: AiWodCardProps) {
+  const [showForm,   setShowForm]   = useState(false);
+  const [result,     setResult]     = useState<WorkoutResultResponse | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   const intensityKey   = wod.intensity ?? "moderate";
   const chipVariant    = INTENSITY_CHIP[intensityKey] ?? "moderate";
   const wodType        = detectWodType(wod.metcon);
+
+  const hasDetail = !!(wod.warmUp || wod.strengthSkill || wod.metcon || wod.coolDown ||
+    wod.scaling || wod.coachNotes || wod.nutritionTip || wod.alert ||
+    (wod.exercises && wod.exercises.length > 0));
 
   function handleSuccess(r: WorkoutResultResponse) {
     setResult(r);
@@ -98,7 +104,10 @@ export function AiWodCard({ wod, athleteWorkoutId }: AiWodCardProps) {
     <div className="space-y-3 overflow-hidden">
 
       {/* ── Hero header ─────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl border border-surface-border bg-surface overflow-hidden">
+      <div
+        className={`relative rounded-3xl border border-surface-border bg-surface overflow-hidden ${hasDetail ? "cursor-pointer active:opacity-80" : ""}`}
+        onClick={() => hasDetail && setShowDetail(v => !v)}
+      >
         {/* Gradient accent */}
         <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
 
@@ -115,65 +124,116 @@ export function AiWodCard({ wod, athleteWorkoutId }: AiWodCardProps) {
             </Chip>
           </div>
 
-          <div className="flex items-center gap-4">
-            {wod.durationMinutes && (
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Clock className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">{wod.durationMinutes} min</span>
-              </div>
-            )}
-            {wod.focus && (
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Target className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium capitalize">{wod.focus.toLowerCase()}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {wod.durationMinutes && (
+                <div className="flex items-center gap-1.5 text-zinc-400">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">{wod.durationMinutes} min</span>
+                </div>
+              )}
+              {wod.focus && (
+                <div className="flex items-center gap-1.5 text-zinc-400">
+                  <Target className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium capitalize">{wod.focus.toLowerCase()}</span>
+                </div>
+              )}
+            </div>
+
+            {hasDetail && (
+              <div className="flex items-center gap-1 text-zinc-500">
+                <span className="text-[10px] font-semibold uppercase tracking-widest">
+                  {showDetail ? "Ocultar" : "Ver detalle"}
+                </span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${showDetail ? "rotate-180" : ""}`}
+                />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Alert ────────────────────────────────────────────────────────── */}
-      {wod.alert && (
-        <div className="flex gap-3 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-          <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-yellow-300 leading-relaxed">{wod.alert}</p>
-        </div>
-      )}
+      {/* ── Detalle expandible ───────────────────────────────────────────── */}
+      {showDetail && (
+        <div className="space-y-3 animate-fade-up">
 
-      {/* ── Sections ─────────────────────────────────────────────────────── */}
-      {wod.warmUp && (
-        <Section icon={SECTION_ICONS.warmup} title="Warm-up" content={wod.warmUp} />
-      )}
+          {/* Alert */}
+          {wod.alert && (
+            <div className="flex gap-3 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+              <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-yellow-300 leading-relaxed">{wod.alert}</p>
+            </div>
+          )}
 
-      {wod.strengthSkill && (
-        <Section icon={SECTION_ICONS.strength} title="Strength / Skill" content={wod.strengthSkill} />
-      )}
+          {/* Sections AI */}
+          {wod.warmUp && (
+            <Section icon={SECTION_ICONS.warmup} title="Warm-up" content={wod.warmUp} />
+          )}
 
-      {wod.metcon && (
-        <Section icon={SECTION_ICONS.metcon} title="WOD" content={wod.metcon} accent />
-      )}
+          {wod.strengthSkill && (
+            <Section icon={SECTION_ICONS.strength} title="Strength / Skill" content={wod.strengthSkill} />
+          )}
 
-      {wod.scaling && (
-        <Section icon={SECTION_ICONS.scaling} title="Escalado · RX · RX+" content={wod.scaling} />
-      )}
+          {wod.metcon && (
+            <Section icon={SECTION_ICONS.metcon} title="WOD" content={wod.metcon} accent />
+          )}
 
-      {wod.coolDown && (
-        <Section icon={SECTION_ICONS.cooldown} title="Cooldown" content={wod.coolDown} />
-      )}
+          {/* Ejercicios clásicos (WODs no generados por IA) */}
+          {!wod.metcon && wod.exercises && wod.exercises.length > 0 && (
+            <div className="rounded-2xl border border-brand/30 bg-brand/5 p-4 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand/20">
+                  <Zap className="h-3.5 w-3.5 text-brand" strokeWidth={2.5} />
+                </div>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-brand">Ejercicios</h3>
+                {scaledRepsFactor !== 1 && (
+                  <span className="ml-auto text-[10px] font-semibold text-zinc-500">
+                    {Math.round(scaledRepsFactor * 100)}% del volumen
+                  </span>
+                )}
+              </div>
+              <ul className="divide-y divide-zinc-800/50">
+                {wod.exercises
+                  .slice()
+                  .sort((a, b) => a.order - b.order)
+                  .map((ex, i) => {
+                    const scaledReps = Math.round(ex.reps * scaledRepsFactor);
+                    return (
+                      <li key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                        <span className="text-sm text-zinc-200">{ex.name}</span>
+                        <span className="text-sm font-bold text-brand">{scaledReps} reps</span>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          )}
 
-      {wod.coachNotes && (
-        <Section icon={SECTION_ICONS.coach} title="Análisis del coach" content={wod.coachNotes} />
-      )}
+          {wod.scaling && (
+            <Section icon={SECTION_ICONS.scaling} title="Escalado · RP" content={wod.scaling} />
+          )}
 
-      {wod.nutritionTip && (
-        <div className="flex gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-          <Salad className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">
-              Nutrición
-            </p>
-            <p className="text-xs text-zinc-300 leading-relaxed">{wod.nutritionTip}</p>
-          </div>
+          {wod.coolDown && (
+            <Section icon={SECTION_ICONS.cooldown} title="Cooldown" content={wod.coolDown} />
+          )}
+
+          {wod.coachNotes && (
+            <Section icon={SECTION_ICONS.coach} title="Análisis del coach" content={wod.coachNotes} />
+          )}
+
+          {wod.nutritionTip && (
+            <div className="flex gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+              <Salad className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">
+                  Nutrición
+                </p>
+                <p className="text-xs text-zinc-300 leading-relaxed">{wod.nutritionTip}</p>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 

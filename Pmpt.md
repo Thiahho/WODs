@@ -77,7 +77,7 @@ FORMATO DE RESPUESTA:
 🔥 Warm-up:
 🏋️ Strength/Skill:
 ⚡ WOD:
-📊 Escalado / RX / RX+:
+📊 Escalado / RP:
 ➕ Accesorios:
 🧘 Cooldown:
 🧠 Análisis basado en historial:

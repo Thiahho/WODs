@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeToken } from "@/lib/auth";
 import { cn } from "@/lib/cn";
-import { LayoutDashboard, Calendar, Dumbbell, Users, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Calendar, Dumbbell, Users, LogOut, ExternalLink, Zap } from "lucide-react";
 
 const NAV = [
   { href: "/admin",          label: "Inicio",  Icon: LayoutDashboard },
@@ -58,10 +58,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <Link
               href="/workout"
-              className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-brand/25 bg-brand/8 px-2.5 py-1.5 text-xs font-semibold text-brand transition-colors hover:bg-brand/15"
             >
-              <ExternalLink className="h-3 w-3" />
-              <span className="hidden sm:inline">Ver como atleta</span>
+              <Zap className="h-3 w-3" />
+              <span>Ver como atleta</span>
             </Link>
             <button
               onClick={handleLogout}
@@ -84,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-1 px-3 py-1"
+                  className="flex flex-col items-center gap-1 px-2 py-1"
                 >
                   <Icon
                     className={cn("h-5 w-5 transition-colors", active ? "text-brand" : "text-zinc-500")}
@@ -96,6 +96,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Link>
               );
             })}
+            {/* Ver como atleta */}
+            <Link
+              href="/workout"
+              className="flex flex-col items-center gap-1 px-2 py-1"
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand/20">
+                <Zap className="h-3 w-3 text-brand" strokeWidth={2.5} />
+              </div>
+              <span className="text-[10px] font-medium text-brand">Atleta</span>
+            </Link>
           </div>
         </div>
       </nav>

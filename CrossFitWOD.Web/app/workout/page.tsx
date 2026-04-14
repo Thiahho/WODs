@@ -16,14 +16,16 @@ export default function WorkoutPage() {
   const { data, isLoading: wodLoading, error: wodError, fetchToday, generate } = useAiWod();
   const { submitted, isLoading: logLoading, error: logError, submit, checkToday, setSubmitted } = useDailyLog();
 
-  const [hasLog,           setHasLog]           = useState<boolean | null>(null);
-  const [athleteWorkoutId, setAthleteWorkoutId] = useState<number | null>(null);
+  const [hasLog,            setHasLog]            = useState<boolean | null>(null);
+  const [athleteWorkoutId,  setAthleteWorkoutId]  = useState<number | null>(null);
+  const [scaledRepsFactor,  setScaledRepsFactor]  = useState<number>(1);
 
   async function loadAthleteWorkout() {
     try {
       const raw = await api.get<unknown>("/api/athlete-workouts/today/me");
       const aw  = TodayWorkoutSchema.parse(raw);
       setAthleteWorkoutId(aw.id);
+      setScaledRepsFactor(aw.scaledRepsFactor);
     } catch {
       // Sin sesión aún — se intentará después de generar
     }
@@ -129,6 +131,7 @@ export default function WorkoutPage() {
             <AiWodCard
               wod={data}
               athleteWorkoutId={athleteWorkoutId ?? undefined}
+              scaledRepsFactor={scaledRepsFactor}
             />
           </div>
         )}

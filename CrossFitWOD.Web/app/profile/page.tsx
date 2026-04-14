@@ -3,17 +3,21 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
+import { removeToken, setHasProfile } from "@/lib/auth";
 import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
-import { User, CheckCircle2 } from "lucide-react";
+import { User, CheckCircle2, LogOut } from "lucide-react";
 
 const LEVELS = [
-  { value: 1, label: "Principiante", icon: "🌱" },
-  { value: 2, label: "Intermedio",   icon: "⚡" },
-  { value: 3, label: "Avanzado",     icon: "🔥" },
+  { value: 1, label: "Begginer", icon: "🌱" },
+  { value: 2, label: "Amateur",   icon: "⚡" },
+  { value: 3, label: "Scaled",     icon: "🔥" },
+  { value: 4, label: "Rx",     icon: "🔥" },
+  { value: 5, label: "Elite",     icon: "🔥" },
 ];
 const GOALS = [
   { value: 1, label: "General",        desc: "Mantenerme activo y saludable" },
@@ -57,12 +61,25 @@ const labelClass = "text-[10px] font-semibold uppercase tracking-widest text-zin
 const sectionClass = "rounded-3xl border border-surface-border bg-surface p-4 space-y-4";
 
 export default function ProfilePage() {
+  const router        = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved,       setSaved]       = useState(false);
 
-  const { data: profile, isLoading } = useQuery<AthleteProfile>({
+  function handleLogout() {
+    removeToken();
+    router.push("/login");
+  }
+
+  const { data: profile, isLoading } = useQuery<AthleteProfile | null>({
     queryKey: ["my-profile"],
-    queryFn:  () => api.get<AthleteProfile>("/api/athletes/me"),
+    queryFn:  async () => {
+      try {
+        return await api.get<AthleteProfile>("/api/athletes/me");
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }
+    },
   });
 
   const {
@@ -90,7 +107,13 @@ export default function ProfilePage() {
     setServerError(null);
     setSaved(false);
     try {
-      await api.put("/api/athletes/me", data);
+      if (profile === null || profile === undefined) {
+        // Coach (o usuario sin perfil) → crear atleta
+        await api.post("/api/athletes/me", data);
+        setHasProfile();
+      } else {
+        await api.put("/api/athletes/me", data);
+      }
       setSaved(true);
     } catch (err) {
       if (err instanceof ApiError) setServerError(err.message);
@@ -135,15 +158,14 @@ export default function ProfilePage() {
             <label className={labelClass}>Nivel CrossFit</label>
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
-                <label key={l.value} className="cursor-pointer">
+                <label key={l.value} className="cursor-pointer flex flex-col items-center gap-1 rounded-2xl border border-surface-border bg-surface-raised py-2.5 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
                   <input type="radio" value={l.value} className="sr-only" {...register("level")} />
-                  <div className="flex flex-col items-center gap-1 rounded-2xl border border-surface-border bg-surface-raised py-2.5 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <span className="text-lg">{l.icon}</span>
-                    <span className="text-[11px] font-semibold text-zinc-300">{l.label}</span>
-                  </div>
+                  <span className="text-lg">{l.icon}</span>
+                  <span className="text-[11px] font-semibold text-zinc-300">{l.label}</span>
                 </label>
               ))}
             </div>
+            {errors.level && <p className="text-xs text-red-400">{errors.level.message}</p>}
           </div>
 
           {/* Objetivo */}
@@ -151,15 +173,14 @@ export default function ProfilePage() {
             <label className={labelClass}>Objetivo</label>
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
-                <label key={g.value} className="cursor-pointer">
+                <label key={g.value} className="cursor-pointer flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
                   <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
-                  <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
-                    <span className="text-[10px] text-zinc-500">{g.desc}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
+                  <span className="text-[10px] text-zinc-500">{g.desc}</span>
                 </label>
               ))}
             </div>
+            {errors.goal && <p className="text-xs text-red-400">{errors.goal.message}</p>}
           </div>
 
           {/* Peso */}
@@ -176,28 +197,24 @@ export default function ProfilePage() {
               <label className={labelClass}>Días / semana</label>
               <div className="flex gap-2">
                 {DAYS.map((d) => (
-                  <label key={d} className="flex-1 cursor-pointer">
+                  <label key={d} className="flex-1 cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
                     <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
-                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
-                      <span className="text-sm font-bold text-zinc-200">{d}</span>
-                    </div>
+                    <span className="text-sm font-bold text-zinc-200">{d}</span>
                   </label>
                 ))}
               </div>
             </div>
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <label className={labelClass}>Duración de sesión</label>
               <div className="grid grid-cols-4 gap-2">
                 {DURATIONS.map((d) => (
-                  <label key={d.value} className="cursor-pointer">
+                  <label key={d.value} className="cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
                     <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
-                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
-                      <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
-                    </div>
+                    <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
                   </label>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Equipment */}
@@ -307,6 +324,17 @@ export default function ProfilePage() {
             {isSubmitting ? "Guardando…" : "Guardar cambios"}
           </PrimaryButton>
         </form>
+
+        <div className="pt-2 pb-8">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm font-semibold text-red-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 active:scale-95"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar sesión
+          </button>
+        </div>
 
       </div>
     </main>

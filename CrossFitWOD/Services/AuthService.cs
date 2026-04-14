@@ -22,9 +22,14 @@ public class AuthService
             throw new InvalidOperationException("El usuario ya existe.");
 
         // Box personal automático
-        var slug = request.Username.ToLower()
+        var baseSlug = request.Username.ToLower()
             .Replace(" ", "-")
             .Replace("_", "-");
+
+        var slug = baseSlug;
+        var suffix = 1;
+        while (await _db.Boxes.AnyAsync(b => b.Slug == slug))
+            slug = $"{baseSlug}-{suffix++}";
 
         var box = new Box
         {

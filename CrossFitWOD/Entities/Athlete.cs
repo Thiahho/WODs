@@ -7,7 +7,7 @@ namespace CrossFitWOD.Entities;
 [Table("Athletes")]
 public class Athlete
 {
-    [Column("id")]
+    [Column("Id")]
     [Required]
     public int Id        { get; set; }
     [Column("userid")]

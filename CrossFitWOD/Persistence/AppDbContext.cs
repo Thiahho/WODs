@@ -1,4 +1,5 @@
 using CrossFitWOD.Entities;
+using CrossFitWOD.Persistence.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrossFitWOD.Persistence;
@@ -19,6 +20,10 @@ public class AppDbContext : DbContext
     public DbSet<AthleteDailyLogs> AthleteDailyLogs => Set<AthleteDailyLogs>();
     public DbSet<AthleteStates>    AthleteStates    => Set<AthleteStates>();
     public DbSet<AthleteStatus>    AthleteStatuses  => Set<AthleteStatus>();
+
+    // ── Vistas (keyless) ─────────────────────────────────────────────────────
+    public DbSet<AthleteWodContextView>      AthleteWodContexts      => Set<AthleteWodContextView>();
+    public DbSet<AthleteDailyLogSummaryView> AthleteDailyLogSummaries => Set<AthleteDailyLogSummaryView>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -85,6 +90,15 @@ public class AppDbContext : DbContext
         b.Entity<WorkoutResult>()
             .HasIndex(r => r.AthleteWorkoutId)
             .IsUnique();
+
+        // ── Vistas keyless ───────────────────────────────────────────────────
+        b.Entity<AthleteWodContextView>()
+            .HasNoKey()
+            .ToView("v_athlete_wod_context");
+
+        b.Entity<AthleteDailyLogSummaryView>()
+            .HasNoKey()
+            .ToView("v_athlete_daily_logs_summary");
 
         // ── AthleteDailyLogs ─────────────────────────────────────────────
         b.Entity<AthleteDailyLogs>()
