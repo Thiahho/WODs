@@ -66,11 +66,6 @@ export default function ProfilePage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved,       setSaved]       = useState(false);
 
-  function handleLogout() {
-    removeToken();
-    router.push("/login");
-  }
-
   const { data: profile, isLoading } = useQuery<AthleteProfile | null>({
     queryKey: ["my-profile"],
     queryFn:  async () => {
