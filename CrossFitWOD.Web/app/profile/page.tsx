@@ -2,23 +2,22 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import {
-  SetupProfileSchema, type SetupProfileForm,
-  ChangePasswordSchema, type ChangePasswordForm,
-} from "@/lib/schemas";
+import { removeToken, setHasProfile } from "@/lib/auth";
+import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { cn } from "@/lib/cn";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { removeToken, getRole, setMode, getMode } from "@/lib/auth";
-import { User, CheckCircle2, LogOut, KeyRound, ChevronDown, Zap } from "lucide-react";
+import { useState } from "react";
+import { User, CheckCircle2, LogOut } from "lucide-react";
 
 const LEVELS = [
-  { value: 1, label: "Principiante", icon: "🌱" },
-  { value: 2, label: "Intermedio",   icon: "⚡" },
-  { value: 3, label: "Avanzado",     icon: "🔥" },
+  { value: 1, label: "Begginer", icon: "🌱" },
+  { value: 2, label: "Amateur",   icon: "⚡" },
+  { value: 3, label: "Scaled",     icon: "🔥" },
+  { value: 4, label: "Rx",     icon: "🔥" },
+  { value: 5, label: "Elite",     icon: "🔥" },
 ];
 const GOALS = [
   { value: 1, label: "General",        desc: "Mantenerme activo y saludable" },
@@ -63,23 +62,25 @@ const labelClass  = "text-[10px] font-semibold uppercase tracking-widest text-zi
 const sectionClass = "rounded-3xl border border-surface-border bg-surface p-4 space-y-4";
 
 export default function ProfilePage() {
-  const router      = useRouter();
-  const queryClient = useQueryClient();
+  const router        = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [saved,       setSaved]       = useState(false);
 
-  const isCoach        = getRole() === "admin";
-  const inAthleteMode  = getMode() === "athlete";
+  function handleLogout() {
+    removeToken();
+    router.push("/login");
+  }
 
-  const [profileError,  setProfileError]  = useState<string | null>(null);
-  const [profileSaved,  setProfileSaved]  = useState(false);
-  const [pwError,       setPwError]       = useState<string | null>(null);
-  const [pwSaved,       setPwSaved]       = useState(false);
-  const [showPwSection, setShowPwSection] = useState(false);
-
-  // ── Athlete profile ──────────────────────────────────────────────────────────
-  const { data: profile, isLoading, error: queryError } = useQuery<AthleteProfile, ApiError>({
+  const { data: profile, isLoading } = useQuery<AthleteProfile | null>({
     queryKey: ["my-profile"],
-    queryFn:  () => api.get<AthleteProfile>("/api/athletes/me"),
-    retry:    false,
+    queryFn:  async () => {
+      try {
+        return await api.get<AthleteProfile>("/api/athletes/me");
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }
+    },
   });
 
   const noProfile = queryError instanceof ApiError && queryError.status === 404;
@@ -123,13 +124,14 @@ export default function ProfilePage() {
     setProfileError(null);
     setProfileSaved(false);
     try {
-      if (noProfile) {
+      if (profile === null || profile === undefined) {
+        // Coach (o usuario sin perfil) → crear atleta
         await api.post("/api/athletes/me", data);
+        setHasProfile();
       } else {
         await api.put("/api/athletes/me", data);
       }
-      await queryClient.invalidateQueries({ queryKey: ["my-profile"] });
-      setProfileSaved(true);
+      setSaved(true);
     } catch (err) {
       if (err instanceof ApiError) setProfileError(err.message);
       else setProfileError("Error de conexión");
@@ -246,30 +248,28 @@ export default function ProfilePage() {
             <label className={labelClass}>Nivel CrossFit</label>
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
-                <label key={l.value} className="cursor-pointer">
-                  <div className="flex flex-col items-center gap-1 rounded-2xl border border-surface-border bg-surface-raised py-2.5 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <input type="radio" value={l.value} className="sr-only" {...register("level")} />
-                    <span className="text-lg">{l.icon}</span>
-                    <span className="text-[11px] font-semibold text-zinc-300">{l.label}</span>
-                  </div>
+                <label key={l.value} className="cursor-pointer flex flex-col items-center gap-1 rounded-2xl border border-surface-border bg-surface-raised py-2.5 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                  <input type="radio" value={l.value} className="sr-only" {...register("level")} />
+                  <span className="text-lg">{l.icon}</span>
+                  <span className="text-[11px] font-semibold text-zinc-300">{l.label}</span>
                 </label>
               ))}
             </div>
+            {errors.level && <p className="text-xs text-red-400">{errors.level.message}</p>}
           </div>
 
           <div className={sectionClass}>
             <label className={labelClass}>Objetivo</label>
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
-                <label key={g.value} className="cursor-pointer">
-                  <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
-                    <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
-                    <span className="text-[10px] text-zinc-500">{g.desc}</span>
-                  </div>
+                <label key={g.value} className="cursor-pointer flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface-raised px-3 py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
+                  <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
+                  <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
+                  <span className="text-[10px] text-zinc-500">{g.desc}</span>
                 </label>
               ))}
             </div>
+            {errors.goal && <p className="text-xs text-red-400">{errors.goal.message}</p>}
           </div>
 
           <div className={sectionClass}>
@@ -284,28 +284,24 @@ export default function ProfilePage() {
               <label className={labelClass}>Días / semana</label>
               <div className="flex gap-2">
                 {DAYS.map((d) => (
-                  <label key={d} className="flex-1 cursor-pointer">
-                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
-                      <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
-                      <span className="text-sm font-bold text-zinc-200">{d}</span>
-                    </div>
+                  <label key={d} className="flex-1 cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                    <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
+                    <span className="text-sm font-bold text-zinc-200">{d}</span>
                   </label>
                 ))}
               </div>
             </div>
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <label className={labelClass}>Duración de sesión</label>
               <div className="grid grid-cols-4 gap-2">
                 {DURATIONS.map((d) => (
-                  <label key={d.value} className="cursor-pointer">
-                    <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
-                      <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
-                      <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
-                    </div>
+                  <label key={d.value} className="cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface-raised py-2 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
+                    <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
+                    <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
                   </label>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className={sectionClass}>
@@ -409,73 +405,17 @@ export default function ProfilePage() {
           </PrimaryButton>
         </form>
 
-        {/* Cambiar contraseña */}
-        <div className="rounded-3xl border border-surface-border bg-surface overflow-hidden">
+        <div className="pt-2 pb-8">
           <button
             type="button"
-            onClick={() => setShowPwSection((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-4 text-left"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm font-semibold text-red-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 active:scale-95"
           >
-            <div className="flex items-center gap-3">
-              <KeyRound className="h-4 w-4 text-zinc-400" />
-              <span className="text-sm font-semibold text-zinc-300">Cambiar contraseña</span>
-            </div>
-            <ChevronDown className={cn("h-4 w-4 text-zinc-500 transition-transform", showPwSection && "rotate-180")} />
+            <LogOut className="h-4 w-4" />
+            Cerrar sesión
           </button>
-
-          {showPwSection && (
-            <form onSubmit={handleSubmitPw(onSubmitPassword)} className="space-y-3 px-4 pb-4">
-              <div className="space-y-1.5">
-                <label className={labelClass}>Contraseña actual</label>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  className={inputClass}
-                  {...registerPw("currentPassword")}
-                />
-                {pwErrors.currentPassword && <p className="text-xs text-red-400">{pwErrors.currentPassword.message}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <label className={labelClass}>Nueva contraseña</label>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  className={inputClass}
-                  {...registerPw("newPassword")}
-                />
-                {pwErrors.newPassword && <p className="text-xs text-red-400">{pwErrors.newPassword.message}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <label className={labelClass}>Repetir nueva contraseña</label>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  className={inputClass}
-                  {...registerPw("confirmNewPassword")}
-                />
-                {pwErrors.confirmNewPassword && <p className="text-xs text-red-400">{pwErrors.confirmNewPassword.message}</p>}
-              </div>
-
-              {pwSaved && (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <p className="text-sm text-emerald-300">Contraseña actualizada.</p>
-                </div>
-              )}
-              {pwError && (
-                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                  {pwError}
-                </div>
-              )}
-
-              <PrimaryButton type="submit" disabled={pwSubmitting} size="md">
-                {pwSubmitting ? "Actualizando…" : "Actualizar contraseña"}
-              </PrimaryButton>
-            </form>
-          )}
         </div>
 
-        <div className="pb-safe" />
       </div>
     </main>
   );

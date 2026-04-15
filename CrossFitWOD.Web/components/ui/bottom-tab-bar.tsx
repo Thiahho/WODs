@@ -31,7 +31,7 @@ export function BottomTabBar({ variant = "athlete" }: Props) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
       <div className="mx-auto max-w-md">
-        <div className="mx-3 mb-3 flex items-end justify-around rounded-2xl border border-surface-border bg-surface/95 px-2 py-2 backdrop-blur-xl shadow-[0_-4px_30px_rgba(0,0,0,0.6)]">
+        <div className="mx-3 mb-3 flex items-end justify-around rounded-2xl border border-surface-border bg-surface/98 px-2 py-2 shadow-[0_-4px_30px_rgba(0,0,0,0.6)]">
           {tabs.map(({ href, label, Icon, central }) => {
             const active = pathname === href || (href !== "/workout" && href !== "/admin" && pathname.startsWith(href));
             if (central) {
@@ -39,9 +39,10 @@ export function BottomTabBar({ variant = "athlete" }: Props) {
                 <Link
                   key={label}
                   href={href}
+                  aria-label="WOD del día"
                   className="relative -mt-6 flex flex-col items-center"
                 >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand shadow-glow animate-pulse-glow">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand shadow-glow animate-pulse-glow" style={{ willChange: "opacity" }}>
                     <Icon className="h-6 w-6 text-black" strokeWidth={2.5} />
                   </span>
                   <span className="mt-1 text-[10px] font-semibold text-brand">{label}</span>
@@ -52,7 +53,9 @@ export function BottomTabBar({ variant = "athlete" }: Props) {
               <Link
                 key={href + label}
                 href={href}
-                className="flex flex-col items-center gap-1 px-3 py-1 group"
+                aria-label={label}
+                aria-current={active ? "page" : undefined}
+                className="flex flex-col items-center gap-1 px-3 py-2.5 group active:opacity-70 transition-opacity"
               >
                 <Icon
                   className={cn(

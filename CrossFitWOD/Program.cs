@@ -27,8 +27,9 @@ builder.Services.AddScoped<AthleteStatusService>();
 builder.Services.AddHttpClient("openai");
 
 // ── Authentication / JWT ──────────────────────────────────────────────────────
-var jwtSecret  = builder.Configuration["Jwt:Secret"]
-    ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
+var jwtSecret  = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrEmpty(jwtSecret))
+    throw new InvalidOperationException("Jwt:Secret is not configured.");
 var jwtIssuer   = builder.Configuration["Jwt:Issuer"]   ?? "CrossFitWOD";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CrossFitWOD";
 

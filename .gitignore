@@ -75,3 +75,20 @@ CrossFitWOD.Tests/obj/
 TestResults/
 *.trx
 coverage/
+
+
+# Build
+bin/
+obj/
+
+# .NET
+*.exe
+*.dll
+*.pdb
+
+# Cache / temp
+.vs/
+node_modules/
+.next/
+dist/
+build/

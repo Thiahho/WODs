@@ -39,8 +39,8 @@ const config: Config = {
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(198,255,61,0.35)" },
-          "50%":      { boxShadow: "0 0 35px rgba(198,255,61,0.55)" },
+          "0%, 100%": { opacity: "0.85" },
+          "50%":      { opacity: "1" },
         },
       },
       animation: {

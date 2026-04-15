@@ -36,10 +36,13 @@ public static class ScalingCalculator
         float max = goal == AthleteGoal.Rehabilitation ? 1.0f : 1.5f;
 
         float next = current;
-        if (!completed || rpe >= 9)
-            next -= step;
-        else if (rpe <= 6)
-            next += step;
+        if (!completed && rpe >= 7)
+            next -= step;           // no terminó Y fue difícil
+        else if (completed && rpe >= 9)
+            next -= step;           // terminó pero al límite
+        else if (completed && rpe <= 6)
+            next += step;           // terminó y fue fácil
+        // !completed && rpe <= 6 → sin cambio (no terminó por tiempo, no por dificultad)
 
         return Math.Clamp(next, 0.5f, max);
     }
