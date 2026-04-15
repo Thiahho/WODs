@@ -78,7 +78,7 @@ export default function ProfilePage() {
     },
   });
 
-  const noProfile = queryError instanceof ApiError && queryError.status === 404;
+  const noProfile = profile === null;
 
   const {
     register, handleSubmit, control, watch, reset,
