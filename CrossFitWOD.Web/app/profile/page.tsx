@@ -105,6 +105,7 @@ export default function ProfilePage() {
     if (profile) {
       reset({
         name:                   profile.name,
+        edad:                   profile.edad ?? undefined,
         level:                  profile.level,
         goal:                   profile.goal,
         weight:                 profile.weight ?? undefined,

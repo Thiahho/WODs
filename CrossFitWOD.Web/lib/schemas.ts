@@ -102,6 +102,7 @@ export const RegisterSchema = z.object({
 
 export const SetupProfileSchema = z.object({
   name:                  z.string().min(1, "El nombre es requerido"),
+  edad:                  z.coerce.number().int().min(1).max(120).optional(),
   level:                 z.coerce.number().int().min(1).max(5),
   goal:                  z.coerce.number().int().min(1).max(4),
   weight:                z.coerce.number().positive().optional(),
