@@ -22,9 +22,11 @@ interface AthleteListItem {
 }
 
 const LEVEL_LABEL: Record<string, string> = {
-  Beginner:     "Principiante",
-  Intermediate: "Intermedio",
-  Advanced:     "Avanzado",
+  Beginner:     "Begginer",
+  Amateur:"Amateur",
+  Scaled: "Scaled",
+  Rx:"Rx",
+  Elite: "Elite",
 };
 
 function factorLabel(factor: number): string {

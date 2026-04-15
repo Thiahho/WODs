@@ -19,6 +19,12 @@ export const AiWodSchema = z.object({
   coachNotes:       z.string().nullable().optional(),
   alert:            z.string().nullable().optional(),
   nutritionTip:     z.string().nullable().optional(),
+  // Ejercicios tradicionales (WODs no generados por IA)
+  exercises: z.array(z.object({
+    name:  z.string(),
+    reps:  z.number(),
+    order: z.number(),
+  })).optional(),
 });
 
 export type AiWod = z.infer<typeof AiWodSchema>;
@@ -95,12 +101,20 @@ export const RegisterSchema = z.object({
 });
 
 export const SetupProfileSchema = z.object({
+<<<<<<< HEAD
   name:                   z.string().min(1, "El nombre es requerido"),
   edad:                   z.coerce.number().int().min(1).max(120).optional(),
   level:                  z.coerce.number().int().min(1).max(3),
   goal:                   z.coerce.number().int().min(1).max(4),
   weight:                 z.coerce.number().positive().optional(),
   daysPerWeek:            z.coerce.number().int().min(1).max(7).default(3),
+=======
+  name:                  z.string().min(1, "El nombre es requerido"),
+  level:                 z.coerce.number().int().min(1).max(5),
+  goal:                  z.coerce.number().int().min(1).max(4),
+  weight:                z.coerce.number().positive().optional(),
+  daysPerWeek:           z.coerce.number().int().min(1).max(7).default(3),
+>>>>>>> claude/crossfit-mobile-design-iMPDq
   sessionDurationMinutes: z.coerce.number().int().default(45),
   equipment:              z.string().default(""),
   weakPoints:             z.string().default(""),
