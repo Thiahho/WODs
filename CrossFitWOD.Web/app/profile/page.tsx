@@ -5,12 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { removeToken, setHasProfile } from "@/lib/auth";
-import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
+import { removeToken, setHasProfile, setMode, getMode, getRole } from "@/lib/auth";
+import { SetupProfileSchema, type SetupProfileForm, ChangePasswordSchema, type ChangePasswordForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { cn } from "@/lib/cn";
 import { useState, useEffect } from "react";
-import { User, CheckCircle2, LogOut } from "lucide-react";
+import { User, CheckCircle2, LogOut, Zap } from "lucide-react";
 
 const LEVELS = [
   { value: 1, label: "Begginer", icon: "🌱" },
@@ -63,8 +63,13 @@ const sectionClass = "rounded-3xl border border-surface-border bg-surface p-4 sp
 
 export default function ProfilePage() {
   const router        = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [saved,       setSaved]       = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [pwError,      setPwError]      = useState<string | null>(null);
+  const [pwSaved,      setPwSaved]      = useState(false);
+
+  const isCoach      = getRole() === "coach";
+  const inAthleteMode = getMode() === "athlete";
 
   const { data: profile, isLoading } = useQuery<AthleteProfile | null>({
     queryKey: ["my-profile"],
@@ -120,13 +125,12 @@ export default function ProfilePage() {
     setProfileSaved(false);
     try {
       if (profile === null || profile === undefined) {
-        // Coach (o usuario sin perfil) → crear atleta
         await api.post("/api/athletes/me", data);
         setHasProfile();
       } else {
         await api.put("/api/athletes/me", data);
       }
-      setSaved(true);
+      setProfileSaved(true);
     } catch (err) {
       if (err instanceof ApiError) setProfileError(err.message);
       else setProfileError("Error de conexión");
@@ -173,6 +177,7 @@ export default function ProfilePage() {
       router.push("/workout");
     }
   }
+
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (isLoading) {
