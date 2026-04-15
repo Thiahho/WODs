@@ -9,7 +9,7 @@ import { removeToken, setHasProfile } from "@/lib/auth";
 import { SetupProfileSchema, type SetupProfileForm } from "@/lib/schemas";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { cn } from "@/lib/cn";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, CheckCircle2, LogOut } from "lucide-react";
 
 const LEVELS = [
