@@ -6,7 +6,7 @@ import { ResultForm } from "./result-form";
 import { Chip } from "@/components/ui/chip";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { WorkoutResultResponse } from "@/hooks/use-register-result";
-import { Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad, AlertTriangle, Clock, Target, ChevronDown } from "lucide-react";
+import { Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad, AlertTriangle, Clock, Target, ChevronDown, ChevronRight } from "lucide-react";
 
 // ── Types & constants ─────────────────────────────────────────────────────────
 
@@ -121,6 +121,17 @@ function Section({
     </div>
   );
 }
+
+// ── Section icons map ─────────────────────────────────────────────────────────
+
+const SECTION_ICONS = {
+  warmup:   Wind,
+  strength: Dumbbell,
+  metcon:   Flame,
+  scaling:  BarChart2,
+  cooldown: Brain,
+  coach:    Zap,
+};
 
 // ── detectWodType ─────────────────────────────────────────────────────────────
 
