@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAiWod } from "@/hooks/use-ai-wod";
 import { useDailyLog } from "@/hooks/use-daily-log";
-import { WodDetailCard } from "@/components/wod-detail-card";
+import { AiWodCard } from "@/components/ai-wod-card";
 import { DailyLogForm } from "@/components/daily-log-form";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ApiError, api } from "@/lib/api";
@@ -22,25 +22,16 @@ export default function WorkoutPage() {
   const { data, isLoading: wodLoading, error: wodError, fetchToday, generate } = useAiWod();
   const { submitted, isLoading: logLoading, error: logError, submit, checkToday, setSubmitted } = useDailyLog();
 
-<<<<<<< HEAD
-  const [hasLog, setHasLog]   = useState<boolean | null>(null);
-  const [workout, setWorkout] = useState<TodayWorkout | null>(null);
-=======
   const [hasLog,            setHasLog]            = useState<boolean | null>(null);
   const [athleteWorkoutId,  setAthleteWorkoutId]  = useState<number | null>(null);
   const [scaledRepsFactor,  setScaledRepsFactor]  = useState<number>(1);
->>>>>>> claude/crossfit-mobile-design-iMPDq
 
   async function loadAthleteWorkout() {
     try {
       const raw = await api.get<unknown>("/api/athlete-workouts/today/me");
-<<<<<<< HEAD
-      setWorkout(TodayWorkoutSchema.parse(raw));
-=======
       const aw  = TodayWorkoutSchema.parse(raw);
       setAthleteWorkoutId(aw.id);
       setScaledRepsFactor(aw.scaledRepsFactor);
->>>>>>> claude/crossfit-mobile-design-iMPDq
     } catch {
       // Sin sesión aún — se cargará después de generar
     }
@@ -59,16 +50,16 @@ export default function WorkoutPage() {
 
   // Tras generar el WOD con IA, cargar el AthleteWorkout completo para mostrarlo
   useEffect(() => {
-    if (data && !workout) {
+    if (data && !athleteWorkoutId) {
       loadAthleteWorkout();
     }
   }, [data]);
 
   const isAuthError  = wodError instanceof ApiError && wodError.status === 401;
   const isNoProfile  = wodError instanceof ApiError && wodError.status === 404;
-  const isLoading    = wodLoading || logLoading || hasLog === null || (!!data && !workout);
-  const showLog      = !workout && hasLog === false && !submitted && !data;
-  const showGenerate = !workout && (submitted || hasLog === true) && !data;
+  const isLoading    = wodLoading || logLoading || hasLog === null || (!!data && !athleteWorkoutId);
+  const showLog      = !athleteWorkoutId && hasLog === false && !submitted && !data;
+  const showGenerate = !athleteWorkoutId && (submitted || hasLog === true) && !data;
 
   const today = new Date().toLocaleDateString("es", {
     weekday: "long", day: "numeric", month: "long",
@@ -155,19 +146,12 @@ export default function WorkoutPage() {
         )}
 
         {/* Step 3: WOD display */}
-        {!isLoading && workout && (
+        {!isLoading && data && athleteWorkoutId && (
           <div className="animate-fade-up">
-<<<<<<< HEAD
-            <WodDetailCard
-              workout={workout}
-              alert={data?.alert}
-              nutritionTip={data?.nutritionTip}
-=======
             <AiWodCard
               wod={data}
               athleteWorkoutId={athleteWorkoutId ?? undefined}
               scaledRepsFactor={scaledRepsFactor}
->>>>>>> claude/crossfit-mobile-design-iMPDq
             />
           </div>
         )}

@@ -113,19 +113,10 @@ export default function SetupPage() {
             <label className={labelClass}>Nivel CrossFit</label>
             <div className="grid grid-cols-3 gap-2">
               {LEVELS.map((l) => (
-<<<<<<< HEAD
-                <label key={l.value} className="cursor-pointer">
-                  <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <input type="radio" value={l.value} className="sr-only" {...register("level")} />
-                    <span className="text-xl">{l.icon}</span>
-                    <span className="text-xs font-semibold text-zinc-300">{l.label}</span>
-                  </div>
-=======
                 <label key={l.value} className="cursor-pointer flex flex-col items-center gap-1.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 text-center transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
                   <input type="radio" value={l.value} className="sr-only" {...register("level")} />
                   <span className="text-xl">{l.icon}</span>
                   <span className="text-xs font-semibold text-zinc-300">{l.label}</span>
->>>>>>> claude/crossfit-mobile-design-iMPDq
                 </label>
               ))}
             </div>
@@ -137,19 +128,10 @@ export default function SetupPage() {
             <label className={labelClass}>Objetivo</label>
             <div className="grid grid-cols-2 gap-2">
               {GOALS.map((g) => (
-<<<<<<< HEAD
-                <label key={g.value} className="cursor-pointer">
-                  <div className="flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
-                    <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
-                    <span className="text-[11px] text-zinc-500">{g.desc}</span>
-                  </div>
-=======
                 <label key={g.value} className="cursor-pointer flex flex-col gap-0.5 rounded-2xl border border-surface-border bg-surface px-3 py-3 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
                   <input type="radio" value={g.value} className="sr-only" {...register("goal")} />
                   <span className="text-xs font-semibold text-zinc-200">{g.label}</span>
                   <span className="text-[11px] text-zinc-500">{g.desc}</span>
->>>>>>> claude/crossfit-mobile-design-iMPDq
                 </label>
               ))}
             </div>
@@ -177,17 +159,9 @@ export default function SetupPage() {
             <label className={labelClass}>Días de entrenamiento / semana</label>
             <div className="flex gap-2">
               {DAYS.map((d) => (
-<<<<<<< HEAD
-                <label key={d} className="flex-1 cursor-pointer">
-                  <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
-                    <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
-                    <span className="text-sm font-bold text-zinc-200">{d}</span>
-                  </div>
-=======
                 <label key={d} className="flex-1 cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10 has-[input:checked]:shadow-glow-sm">
                   <input type="radio" value={d} className="sr-only" {...register("daysPerWeek")} />
                   <span className="text-sm font-bold text-zinc-200">{d}</span>
->>>>>>> claude/crossfit-mobile-design-iMPDq
                 </label>
               ))}
             </div>
@@ -198,17 +172,9 @@ export default function SetupPage() {
             <label className={labelClass}>Duración de sesión</label>
             <div className="grid grid-cols-4 gap-2">
               {DURATIONS.map((d) => (
-<<<<<<< HEAD
-                <label key={d.value} className="cursor-pointer">
-                  <div className="flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
-                    <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
-                    <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
-                  </div>
-=======
                 <label key={d.value} className="cursor-pointer flex items-center justify-center rounded-2xl border border-surface-border bg-surface py-2.5 transition-all has-[input:checked]:border-brand has-[input:checked]:bg-brand/10">
                   <input type="radio" value={d.value} className="sr-only" {...register("sessionDurationMinutes")} />
                   <span className="text-xs font-semibold text-zinc-200">{d.label}</span>
->>>>>>> claude/crossfit-mobile-design-iMPDq
                 </label>
               ))}
             </div>

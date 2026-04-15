@@ -4,11 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeToken } from "@/lib/auth";
 import { cn } from "@/lib/cn";
-<<<<<<< HEAD
-import { LayoutDashboard, Calendar, Dumbbell, Users, LogOut, User, UsersRound } from "lucide-react";
-=======
-import { LayoutDashboard, Calendar, Dumbbell, Users, LogOut, ExternalLink, Zap } from "lucide-react";
->>>>>>> claude/crossfit-mobile-design-iMPDq
+import { LayoutDashboard, Calendar, Dumbbell, Users, LogOut, User, UsersRound, Zap } from "lucide-react";
 
 const NAV = [
   { href: "/admin",          label: "Inicio",  Icon: LayoutDashboard },
@@ -62,8 +58,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           <div className="flex items-center gap-3">
-<<<<<<< HEAD
-=======
             <Link
               href="/workout"
               className="flex items-center gap-1.5 rounded-xl border border-brand/25 bg-brand/8 px-2.5 py-1.5 text-xs font-semibold text-brand transition-colors hover:bg-brand/15"
@@ -71,7 +65,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Zap className="h-3 w-3" />
               <span>Ver como atleta</span>
             </Link>
->>>>>>> claude/crossfit-mobile-design-iMPDq
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 text-xs text-zinc-500 hover:text-red-400 transition-colors"

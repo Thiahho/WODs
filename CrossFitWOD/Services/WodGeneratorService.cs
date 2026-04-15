@@ -201,11 +201,11 @@ public class WodGeneratorService
         var mult = RepMultiplier(athlete.Level);
 
         // Parsear equipamiento y puntos débiles del atleta
-        var equip = athlete.Equipment
+        var equip = (athlete.Equipment ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet();
 
-        var weakDomains = athlete.WeakPoints
+        var weakDomains = (athlete.WeakPoints ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet();
 
@@ -247,12 +247,9 @@ public class WodGeneratorService
             Exercises       = exercises
         };
 
-        _db.Wods.Add(wod);
-        await _db.SaveChangesAsync();
-
         var session = new WorkoutSession
         {
-            WodId = wod.Id,
+            Wod   = wod,
             BoxId = athlete.BoxId,
             Date  = date
         };

@@ -6,14 +6,7 @@ import { ResultForm } from "./result-form";
 import { Chip } from "@/components/ui/chip";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import type { WorkoutResultResponse } from "@/hooks/use-register-result";
-<<<<<<< HEAD
-import {
-  Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad,
-  AlertTriangle, Clock, Target, ChevronRight,
-} from "lucide-react";
-=======
 import { Flame, Dumbbell, Zap, BarChart2, Wind, Brain, Salad, AlertTriangle, Clock, Target, ChevronDown } from "lucide-react";
->>>>>>> claude/crossfit-mobile-design-iMPDq
 
 // ── Types & constants ─────────────────────────────────────────────────────────
 
@@ -167,17 +160,12 @@ export function AiWodCard({ wod, athleteWorkoutId, scaledRepsFactor = 1 }: AiWod
   return (
     <div className="space-y-2.5">
 
-<<<<<<< HEAD
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl border border-surface-border bg-surface overflow-hidden">
-=======
       {/* ── Hero header ─────────────────────────────────────────────────── */}
       <div
         className={`relative rounded-3xl border border-surface-border bg-surface overflow-hidden ${hasDetail ? "cursor-pointer active:opacity-80" : ""}`}
         onClick={() => hasDetail && setShowDetail(v => !v)}
       >
         {/* Gradient accent */}
->>>>>>> claude/crossfit-mobile-design-iMPDq
         <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
         <div className="relative p-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
@@ -187,19 +175,6 @@ export function AiWodCard({ wod, athleteWorkoutId, scaledRepsFactor = 1 }: AiWod
             </div>
             <Chip variant={chipVariant}>{INTENSITY_LABEL[intensityKey] ?? intensityKey}</Chip>
           </div>
-<<<<<<< HEAD
-          <div className="flex items-center gap-4">
-            {wod.durationMinutes && (
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Clock className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">{wod.durationMinutes} min</span>
-              </div>
-            )}
-            {wod.focus && (
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Target className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium capitalize">{wod.focus.toLowerCase()}</span>
-=======
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -225,51 +200,12 @@ export function AiWodCard({ wod, athleteWorkoutId, scaledRepsFactor = 1 }: AiWod
                 <ChevronDown
                   className={`h-3.5 w-3.5 transition-transform duration-200 ${showDetail ? "rotate-180" : ""}`}
                 />
->>>>>>> claude/crossfit-mobile-design-iMPDq
               </div>
             )}
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* ── Alert ───────────────────────────────────────────────────────── */}
-      {wod.alert && (
-        <div className="flex gap-3 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-          <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-yellow-300 leading-relaxed">{wod.alert}</p>
-        </div>
-      )}
-
-      {/* ── Secciones acordeón ──────────────────────────────────────────── */}
-      {wod.warmUp && (
-        <Section icon={Flame}    title="Warm-up"           content={wod.warmUp}       />
-      )}
-      {wod.strengthSkill && (
-        <Section icon={Dumbbell} title="Strength / Skill"  content={wod.strengthSkill} />
-      )}
-      {wod.metcon && (
-        <Section icon={Zap}      title="WOD"               content={wod.metcon}        accent defaultOpen />
-      )}
-      {wod.scaling && (
-        <Section icon={BarChart2} title="Escalado · RX · RX+" content={wod.scaling}   />
-      )}
-      {wod.coolDown && (
-        <Section icon={Wind}     title="Cooldown"           content={wod.coolDown}     />
-      )}
-      {wod.coachNotes && (
-        <Section icon={Brain}    title="Análisis del coach" content={wod.coachNotes}   />
-      )}
-
-      {/* ── Nutrición ───────────────────────────────────────────────────── */}
-      {wod.nutritionTip && (
-        <div className="flex gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-          <Salad className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">Nutrición</p>
-            <p className="text-xs text-zinc-300">{wod.nutritionTip}</p>
-          </div>
-=======
       {/* ── Detalle expandible ───────────────────────────────────────────── */}
       {showDetail && (
         <div className="space-y-3 animate-fade-up">
@@ -350,7 +286,6 @@ export function AiWodCard({ wod, athleteWorkoutId, scaledRepsFactor = 1 }: AiWod
             </div>
           )}
 
->>>>>>> claude/crossfit-mobile-design-iMPDq
         </div>
       )}
 
